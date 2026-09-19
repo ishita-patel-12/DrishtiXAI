@@ -1,4 +1,4 @@
-# Computer Vision Support Layer — Person 2's Component
+# Computer Vision Support Layer — 
 
 This is the Computer Vision (CV) support layer for a larger, multi-person
 Explainable AI system for Diabetic Retinopathy (DR) screening. It is
