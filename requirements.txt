@@ -1,0 +1,5 @@
+opencv-python>=4.5
+numpy>=1.20
+
+# Only needed to run the test suite - not required by the modules themselves
+pytest>=7.0
