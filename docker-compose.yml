@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: drishtixai_db
+    restart: always
+    environment:
+      POSTGRES_USER: drishti_user
+      POSTGRES_PASSWORD: drishti_pass
+      POSTGRES_DB: drishtixai_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: drishtixai_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://drishti_user:drishti_pass@db:5432/drishtixai_db
+      - ENVIRONMENT=production
+    depends_on:
+      - db
+    volumes:
+      - ./backend/outputs:/app/backend/outputs
+
+volumes:
+  postgres_data:

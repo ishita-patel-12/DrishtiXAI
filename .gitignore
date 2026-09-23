@@ -1,0 +1,43 @@
+# Python & Virtual Environments
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+ENV/
+.venv
+
+# Model Weights & Large Artifacts
+backend/weights/*.pt
+backend/weights/*.bin
+ml/datasets/*
+!ml/datasets/.gitkeep
+
+# Generated Outputs
+backend/outputs/gradcam/*
+backend/outputs/lesions/*
+backend/outputs/reports/*
+!backend/outputs/.gitkeep
+
+# Database & Storage
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment & Credentials
+.env
+.env.local
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Node / Web
+node_modules/
+dist/
+build/
+
+# Test Cache
+.pytest_cache/

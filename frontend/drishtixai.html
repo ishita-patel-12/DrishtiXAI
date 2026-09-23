@@ -1,0 +1,1994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DrishtiXAI — Explainable Diabetic Retinopathy Screening</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   TOKENS
+   ============================================================ */
+:root{
+  --bg:#071018; --bg2:#0B151F; --surface:#101D28; --card:#13222E; --card-hi:#172A38;
+  --line:rgba(255,255,255,.08); --line-hi:rgba(255,255,255,.18);
+  --tx:#F5F7FA; --tx2:#9AA9B5; --tx3:#7D8D99;
+  --red:#E5484D; --red-br:#FF5A5F; --red-deep:#9E2B32; --red-glow:rgba(229,72,77,.16); --btn-red:#CF3238;
+  --ok:#36C98F; --info:#5BA7FF; --warn:#F2B84B;
+  --r:14px; --r-sm:10px; --ease:cubic-bezier(.2,.7,.2,1);
+  --font:Inter,Manrope,"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth;scroll-padding-top:84px}
+body{background:var(--bg);color:var(--tx);font:400 15px/1.55 var(--font);-webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100vh}
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(255,255,255,.024) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.024) 1px,transparent 1px);
+  background-size:48px 48px;-webkit-mask-image:radial-gradient(ellipse 80% 60% at 72% 18%,#000,transparent 75%);mask-image:radial-gradient(ellipse 80% 60% at 72% 18%,#000,transparent 75%)}
+body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.035;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+main,footer,.nav{position:relative;z-index:1}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input{font:inherit;color:inherit}
+h1,h2,h3,h4{font-weight:700;letter-spacing:-.02em;line-height:1.1}
+:focus-visible{outline:2px solid var(--info);outline-offset:3px;border-radius:6px}
+.i{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.i.sm{width:14px;height:14px}.i.lg{width:22px;height:22px}
+.wrap{max-width:1400px;margin:0 auto;padding:0 clamp(20px,4vw,56px)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ============================================================
+   NAV
+   ============================================================ */
+.nav{position:sticky;top:0;z-index:50;background:rgba(7,16,24,.72);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);box-shadow:0 8px 30px -18px rgba(0,0,0,.8)}
+.nav-in{max-width:1400px;margin:0 auto;height:64px;padding:0 clamp(20px,4vw,56px);display:flex;align-items:center;gap:40px}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--tx)}
+.logo{width:30px;height:30px}
+.brand-name{font-weight:700;letter-spacing:.14em;font-size:14px}
+.brand-name b{color:var(--red-br);font-weight:700}
+.nav-links{display:flex;gap:4px}
+.nav-links button{height:36px;padding:0 14px;border-radius:8px;color:var(--tx2);font-size:14px;font-weight:500;transition:color .2s,background .2s}
+.nav-links button:hover{color:var(--tx);background:rgba(255,255,255,.05)}
+.nav-links button.active{color:var(--tx);background:rgba(255,255,255,.07);box-shadow:inset 0 -2px 0 var(--red)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:20px}
+.status{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;letter-spacing:.1em;color:var(--tx2)}
+.ver{font-size:12px;color:var(--tx3);padding:4px 10px;border:1px solid var(--line);border-radius:6px}
+.pm-toggle{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--tx2);height:32px;padding:0 4px;transition:color .2s}
+.pm-toggle:hover{color:var(--tx)}
+.pm-toggle .sw{width:28px;height:16px;border-radius:99px;background:rgba(255,255,255,.12);position:relative;transition:background .25s}
+.pm-toggle .sw::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff;transition:transform .25s var(--ease)}
+.pm-toggle[aria-pressed="true"]{color:var(--tx)}
+.pm-toggle[aria-pressed="true"] .sw{background:var(--btn-red)}
+.pm-toggle[aria-pressed="true"] .sw::after{transform:translateX(12px)}
+.menu-btn{display:none;width:40px;height:40px;border-radius:8px;border:1px solid var(--line);align-items:center;justify-content:center}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--tx3);display:inline-block;flex:none}
+.dot.ok{background:var(--ok);box-shadow:0 0 0 3px rgba(54,201,143,.16)}
+.dot.red{background:var(--red)}.dot.warn{background:var(--warn)}.dot.info{background:var(--info)}
+.pulse{animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(54,201,143,.16)}50%{box-shadow:0 0 0 6px rgba(54,201,143,.04)}}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;height:44px;padding:0 22px;border-radius:var(--r-sm);font-weight:600;font-size:13px;letter-spacing:.07em;border:1px solid transparent;transition:transform .22s var(--ease),box-shadow .22s,background .2s,border-color .2s,color .2s;white-space:nowrap}
+.btn.lg{height:54px;padding:0 30px;font-size:14px}
+.btn.primary{background:var(--btn-red);color:#fff;box-shadow:0 6px 20px -8px rgba(229,72,77,.6)}
+.btn.primary:hover{background:var(--red);transform:translateY(-3px);box-shadow:0 14px 32px -8px rgba(229,72,77,.6)}
+.btn.primary:active{transform:translateY(-1px)}
+.btn.secondary{background:var(--surface);border-color:var(--line-hi);color:var(--tx)}
+.btn.secondary:hover{border-color:rgba(255,255,255,.34);background:var(--card-hi);transform:translateY(-2px)}
+.btn.sm{height:36px;padding:0 14px;font-size:12px}
+.btn-text{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--tx2);padding:6px 2px;transition:color .2s}
+.btn-text:hover{color:var(--tx)}
+.btn-text .i{transition:transform .2s var(--ease)}
+.btn-text:hover .i{transform:translateX(3px)}
+.btn[disabled]{opacity:.5;pointer-events:none}
+.cta-ring{animation:ctaRing 1.6s var(--ease) 1s 1}
+@keyframes ctaRing{0%{box-shadow:0 0 0 0 rgba(229,72,77,.5)}100%{box-shadow:0 0 0 18px rgba(229,72,77,0)}}
+
+/* ============================================================
+   CARDS
+   ============================================================ */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);transition:border-color .25s}
+.card:hover{border-color:rgba(255,255,255,.14)}
+.card.l1{background:linear-gradient(180deg,var(--card-hi),var(--card) 60%);box-shadow:0 24px 48px -28px rgba(0,0,0,.7)}
+.card.l3{background:var(--surface);border-radius:12px}
+.eyebrow{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:600;letter-spacing:.16em;color:var(--tx2);text-transform:uppercase}
+.lbl{font-size:12px;font-weight:600;letter-spacing:.14em;color:var(--tx2);text-transform:uppercase}
+.badge{display:inline-flex;align-items:center;gap:8px;height:28px;padding:0 12px;border-radius:99px;font-size:11px;font-weight:600;letter-spacing:.1em;background:rgba(6,12,18,.78);border:1px solid var(--line-hi);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.badge.warn{color:var(--warn);border-color:rgba(242,184,75,.4)}
+.badge.ok{color:var(--ok);border-color:rgba(54,201,143,.35)}
+.badge.info{color:var(--info);border-color:rgba(91,167,255,.35)}
+.pill{display:inline-flex;align-items:center;gap:8px;height:26px;padding:0 11px;border-radius:99px;font-size:12px;font-weight:600;border:1px solid var(--line-hi);color:var(--tx2);white-space:nowrap}
+.pill.ok{color:var(--ok);border-color:rgba(54,201,143,.35);background:rgba(54,201,143,.07)}
+.pill.warn{color:var(--warn);border-color:rgba(242,184,75,.35);background:rgba(242,184,75,.07)}
+.pill.red{color:var(--red-br);border-color:rgba(255,90,95,.4);background:rgba(229,72,77,.09)}
+.pill.mute{color:var(--tx2)}
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.hero{position:relative;padding:clamp(28px,5vh,64px) 0 clamp(48px,7vh,88px)}
+.hero-grid{display:grid;grid-template-columns:1.02fr 1fr;gap:clamp(32px,5vw,80px);align-items:center;min-height:calc(100vh - 64px - 90px)}
+.hero h1{font-size:clamp(38px,4.7vw,64px);line-height:1.02;letter-spacing:-.035em;margin:22px 0 22px;font-weight:700}
+.hero h1 span{color:var(--tx2)}
+.lede{max-width:500px;font-size:clamp(16px,1.3vw,18px);color:var(--tx2);line-height:1.6}
+.cta{display:flex;gap:14px;flex-wrap:wrap;margin-top:36px}
+.flow{list-style:none;display:flex;gap:0;margin-top:56px;max-width:560px;border-top:1px solid var(--line);padding-top:20px}
+.flow li{flex:1;font-size:12px;color:var(--tx2);line-height:1.4;padding-right:12px;position:relative}
+.flow li b{display:block;font-size:11px;color:var(--red-br);letter-spacing:.12em;margin-bottom:6px;font-weight:600}
+.hero-vis{position:relative;display:flex;flex-direction:column;align-items:center}
+.retina-frame{position:relative;width:min(100%,560px);aspect-ratio:1}
+.retina-frame .glow{position:absolute;inset:6%;border-radius:50%;background:radial-gradient(circle,rgba(229,72,77,.22),transparent 68%);filter:blur(30px)}
+.retina-frame .rings{position:absolute;inset:0;width:100%;height:100%}
+.retina-img{position:absolute;inset:12%;border-radius:50%;overflow:hidden;background:#000;box-shadow:0 0 0 1px rgba(255,255,255,.14),0 30px 80px -20px rgba(0,0,0,.9)}
+.retina-img img{width:100%;height:100%;object-fit:cover;transform:scale(1.05);display:block}
+.sweep{position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,transparent,rgba(255,90,95,.95),transparent);box-shadow:0 0 20px 5px rgba(229,72,77,.35);opacity:0;animation:sweep 9s ease-in-out 1s infinite}
+.sweep::after{content:"";position:absolute;left:0;right:0;bottom:2px;height:70px;background:linear-gradient(0deg,rgba(229,72,77,.16),transparent)}
+@keyframes sweep{0%{top:0;opacity:0}3%{opacity:1}19%{top:100%;opacity:1}22%{top:100%;opacity:0}100%{top:100%;opacity:0}}
+.chip{position:absolute;display:inline-flex;align-items:center;gap:8px;height:28px;padding:0 12px;border-radius:8px;background:rgba(9,18,26,.86);border:1px solid var(--line-hi);font-size:11px;font-weight:600;letter-spacing:.1em;color:var(--tx);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);white-space:nowrap}
+.chip small{color:var(--tx2);font-weight:500;font-size:11px;letter-spacing:.06em}
+.chip.c1{top:7%;left:0}.chip.c2{top:44%;right:-4%}.chip.c3{bottom:8%;left:4%}
+.mk{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;border:1.5px solid var(--red-br);border-radius:50%}
+.mk::after{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--red-br)}
+.mk span{position:absolute;left:22px;top:-2px;font-size:10px;letter-spacing:.12em;color:var(--tx);font-weight:600;text-shadow:0 1px 4px #000;white-space:nowrap}
+.mk.left span{left:auto;right:22px}
+.hero-note{margin-top:18px;font-size:12px;color:var(--tx3)}
+
+/* hero load choreography */
+.a{opacity:0;animation:rise .6s var(--ease) both;animation-delay:calc(var(--i,0)*90ms + 120ms)}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.hero-vis{opacity:0;animation:fadeIn .8s ease .3s both}
+@keyframes fadeIn{to{opacity:1}}
+.chip,.mk{opacity:0;animation:fadeIn .5s ease both}
+.chip.c1{animation-delay:.85s}.chip.c2{animation-delay:.95s}.chip.c3{animation-delay:1.05s}.mk{animation-delay:.9s}
+
+/* ============================================================
+   SECTIONS / WORKSPACE
+   ============================================================ */
+.section{padding:clamp(48px,7vh,88px) 0}
+.ws-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:32px;flex-wrap:wrap}
+.ws-head h2,.sec-head h2,.res-head h2,.page-head h2{font-size:clamp(26px,2.6vw,36px);margin-top:12px}
+.ws-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(320px,1fr);gap:24px;align-items:start}
+.demo-menu{position:relative}
+.menu{position:absolute;right:0;top:calc(100% + 8px);min-width:250px;background:var(--surface);border:1px solid var(--line-hi);border-radius:12px;padding:6px;box-shadow:0 24px 48px -12px rgba(0,0,0,.8);z-index:20;animation:pop .18s var(--ease)}
+@keyframes pop{from{opacity:0;transform:translateY(-6px) scale(.98)}to{opacity:1;transform:none}}
+.menu button{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:8px;text-align:left;font-size:14px;color:var(--tx);transition:background .15s}
+.menu button:hover,.menu button:focus-visible{background:rgba(255,255,255,.06)}
+.menu button small{display:block;color:var(--tx3);font-size:12px}
+.menu .foot{padding:8px 12px 6px;font-size:11px;color:var(--tx3);border-top:1px solid var(--line);margin-top:4px}
+
+/* upload */
+.upload{position:relative;min-height:clamp(440px,62vh,580px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 24px;cursor:pointer;overflow:hidden;border-radius:var(--r);border:1px solid var(--line);
+  background:radial-gradient(ellipse at 50% 40%,rgba(229,72,77,.05),transparent 60%),linear-gradient(180deg,#0E1B26,#0A141D);transition:border-color .25s,box-shadow .3s,background .3s}
+.upload::before{content:"";position:absolute;inset:14px;border-radius:calc(var(--r) - 4px);border:1px solid rgba(255,255,255,.05);pointer-events:none}
+.upload:hover,.upload.drag{border-color:rgba(255,90,95,.55);box-shadow:0 0 0 1px rgba(255,90,95,.2),0 0 60px -10px var(--red-glow),inset 0 0 80px -30px rgba(229,72,77,.22)}
+.upload .scanner{width:132px;height:132px;margin-bottom:24px;transition:transform .4s var(--ease)}
+.upload:hover .scanner,.upload.drag .scanner{transform:translateY(-6px)}
+.upload h3{font-size:26px;margin:8px 0 6px}
+.upload p{color:var(--tx2);font-size:14px}
+.upload .meta{display:flex;gap:10px;margin:22px 0 4px;color:var(--tx3);font-size:12px;letter-spacing:.06em}
+.upload .meta span{padding:3px 10px;border:1px solid var(--line);border-radius:6px}
+.upload .row{display:flex;gap:18px;align-items:center;margin-top:20px}
+.spin-arc{transform-origin:66px 66px;animation:spin 8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.err{display:flex;gap:14px;align-items:flex-start;padding:16px 18px;margin-bottom:20px;border-radius:12px;border:1px solid rgba(242,184,75,.4);background:rgba(242,184,75,.07);animation:pop .25s var(--ease)}
+.err b{display:block;letter-spacing:.06em;font-size:13px;color:var(--warn)}
+.err span{font-size:14px;color:var(--tx2)}
+.err button{margin-left:auto;color:var(--tx2)}
+
+/* preview */
+.preview{padding:14px;overflow:hidden}
+.pv-frame{position:relative;height:clamp(360px,60vh,560px);background:#020507;border-radius:10px;overflow:hidden;cursor:default;touch-action:pan-y}
+.pv-frame.zoomed,.vw-frame.zoomed{cursor:grab}.pv-frame.grabbing,.vw-frame.grabbing{cursor:grabbing}
+.stack{position:absolute;inset:0;transition:transform .25s var(--ease);will-change:transform}
+.pv-frame.grabbing .stack,.vw-frame.grabbing .stack{transition:none}
+.stack img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;user-select:none;-webkit-user-drag:none}
+.cb{position:absolute;width:22px;height:22px;border:1.5px solid rgba(255,255,255,.35);pointer-events:none}
+.cb.tl{top:12px;left:12px;border-right:0;border-bottom:0}.cb.tr{top:12px;right:12px;border-left:0;border-bottom:0}
+.cb.bl{bottom:12px;left:12px;border-right:0;border-top:0}.cb.br{bottom:12px;right:12px;border-left:0;border-top:0}
+.pv-badge{position:absolute;top:16px;left:44px}
+.pv-tools{position:absolute;right:14px;bottom:14px;display:flex;gap:6px}
+.tool{height:32px;padding:0 10px;display:inline-flex;align-items:center;gap:6px;border-radius:8px;background:rgba(6,12,18,.82);border:1px solid var(--line-hi);font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--tx);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);transition:background .15s,border-color .15s}
+.tool:hover{background:rgba(30,46,60,.95);border-color:rgba(255,255,255,.34)}
+.tool[aria-pressed="true"]{border-color:var(--info);color:var(--info)}
+.pv-foot{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 8px 6px;flex-wrap:wrap}
+.pv-foot .fn{font-size:13px;color:var(--tx2);display:flex;align-items:center;gap:14px;min-width:0}
+.pv-foot .fn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px}
+.scan{position:absolute;left:0;right:0;height:3px;top:0;background:linear-gradient(90deg,transparent,#FF5A5F,transparent);box-shadow:0 0 28px 8px rgba(229,72,77,.4);animation:scanY 1.9s ease-in-out infinite alternate;pointer-events:none}
+.scan::after{content:"";position:absolute;left:0;right:0;bottom:3px;height:120px;background:linear-gradient(0deg,rgba(229,72,77,.14),transparent)}
+@keyframes scanY{from{top:0}to{top:calc(100% - 3px)}}
+.is-scanning .pv-frame::after{content:"";position:absolute;inset:0;background:rgba(7,16,24,.28);pointer-events:none}
+.scan-label{position:absolute;left:0;right:0;bottom:18px;text-align:center;z-index:2;font-size:12px;letter-spacing:.18em;font-weight:600;color:var(--tx)}
+.preview.rejected .stack img{filter:blur(1px) saturate(.7) brightness(.8)}
+.pv-progress{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden;min-width:120px}
+.pv-progress i{display:block;height:100%;width:0;background:var(--red);transition:width .5s var(--ease)}
+
+/* side */
+.side{display:flex;flex-direction:column;gap:16px}
+.case-panel{padding:24px}
+.case-panel h3,.card h3.ch{font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:var(--tx2);font-weight:600;margin-bottom:18px}
+.fld{display:block;margin-bottom:14px}
+.fld>span{display:flex;justify-content:space-between;font-size:12px;color:var(--tx2);margin-bottom:6px}
+.fld>span em{font-style:normal;color:var(--tx3)}
+.fld input{width:100%;height:42px;padding:0 12px;border-radius:9px;border:1px solid var(--line-hi);background:var(--bg2);font-size:14px;transition:border-color .2s,box-shadow .2s}
+.fld input:hover{border-color:rgba(255,255,255,.28)}
+.fld input:focus{outline:0;border-color:var(--info);box-shadow:0 0 0 3px rgba(91,167,255,.18)}
+.fld input::placeholder{color:var(--tx3)}
+.two{display:grid;grid-template-columns:.7fr 1.3fr;gap:12px}
+.hint{font-size:12px;color:var(--tx3)}
+.next{padding:20px 24px}
+.next ol{list-style:none;display:grid;gap:12px}
+.next li{display:flex;gap:12px;font-size:13px;color:var(--tx2);align-items:flex-start}
+.next li .i{color:var(--tx3);margin-top:1px}
+
+/* ============================================================
+   INTAKE / WORKFLOW
+   ============================================================ */
+.wf{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;list-style:none;margin:0 0 28px}
+.wf li{display:flex;gap:10px;align-items:flex-start;padding-top:12px;border-top:2px solid var(--line);color:var(--tx3);transition:border-color .3s,color .3s}
+.wf .n{display:grid;place-items:center;min-width:18px;height:18px;font-size:11px;font-weight:600;letter-spacing:.08em;margin-top:1px}
+.wf b{display:block;font-size:12px;letter-spacing:.12em;font-weight:600}
+.wf small{display:block;font-size:12px;color:var(--tx3);margin-top:2px;font-weight:400}
+.wf li.active{border-color:var(--red);color:var(--tx)}.wf li.active .n{color:var(--red-br)}
+.wf li.done{border-color:rgba(54,201,143,.55);color:var(--tx2)}.wf li.done .n{color:var(--ok)}
+.wf li.warn{border-color:var(--warn);color:var(--tx)}.wf li.warn .n{color:var(--warn)}
+.ch-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+.ch-row h3,.card .ch-row h3.ch{margin:0}
+.grp{padding-top:14px;margin-top:14px;border-top:1px solid var(--line)}
+.ch-row + .grp{border-top:0;margin-top:0;padding-top:0}
+.gl{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);font-weight:600;margin-bottom:12px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.intake .fld{margin-bottom:10px}
+.intake .fld input,.fld select{width:100%;height:38px;padding:0 12px;border-radius:99px;border:1px solid var(--line-hi);background-color:var(--bg2);font-size:14px;transition:border-color .2s,box-shadow .2s}
+.fld select{padding-right:34px;-webkit-appearance:none;appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239AA9B5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 12px center}
+.fld select:hover{border-color:rgba(255,255,255,.28)}
+.fld select:focus{outline:0;border-color:var(--info);box-shadow:0 0 0 3px rgba(91,167,255,.18)}
+.fld select.empty{color:var(--tx3)}
+.fld select option{background:#101D28;color:#F5F7FA}
+.rq{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--red-br);margin-left:6px;vertical-align:middle}
+.inp{position:relative}
+.inp .u{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-style:normal;font-size:12px;color:var(--tx3);pointer-events:none;transition:opacity .15s}
+.inp.has-u input{padding-right:58px}
+.inp.hide-u input:placeholder-shown + .u{opacity:0}
+.inp.hide-u input:placeholder-shown{padding-right:12px}
+.fh{display:block;font-size:11px;color:var(--tx3);margin-top:4px}
+.fe{display:none;font-size:11px;color:var(--red-br);margin-top:4px}
+.fld.bad .fe,.yn.bad .fe{display:block}
+.fld.bad input,.fld.bad select{border-color:rgba(255,90,95,.75);box-shadow:0 0 0 3px rgba(229,72,77,.12)}
+.yn{margin-bottom:8px}
+.ynr{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.yl{font-size:12px;color:var(--tx2)}
+.yl em{font-style:normal;color:var(--tx3);margin-left:8px}
+.seg.mini{padding:3px;border-radius:99px;flex:none}
+.seg.mini button{height:26px;padding:0 10px;font-size:12px;letter-spacing:0;font-weight:500}
+.seg.mini button[aria-checked="true"]{background:rgba(255,255,255,.12);color:var(--tx);box-shadow:inset 0 0 0 1px rgba(255,255,255,.16)}
+.yn.bad .seg{border-color:rgba(255,90,95,.75)}
+details.opt{margin-top:6px;border-top:1px solid var(--line);padding-top:12px}
+details.opt summary{cursor:pointer;font-size:12px;color:var(--tx2);list-style:none;display:flex;gap:8px;align-items:center}
+details.opt summary::-webkit-details-marker{display:none}
+details.opt summary::before{content:"+";color:var(--tx3);width:12px;text-align:center}
+details.opt[open] summary::before{content:"–"}
+details.opt summary em{font-style:normal;color:var(--tx3)}
+details.opt[open] summary{margin-bottom:12px}
+.req-note{font-size:12px;color:var(--tx3);margin-top:10px}
+.req-note .rq{margin:0 6px 1px 0}
+.sum{display:grid}
+.sum div{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.sum div:last-child{border-bottom:0}
+.sum dt{color:var(--tx2)}.sum dd{color:var(--tx);font-weight:500;text-align:right}
+.next .ck{align-items:center}.next .ck.ok{color:var(--tx)}.next .ck.ok .i{color:var(--ok)}
+.ckc{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--line-hi);flex:none;display:inline-block}
+.ckc.sm{width:12px;height:12px}
+.ok-t{color:var(--ok)}
+.ready-line{display:flex;gap:8px;align-items:center;margin-top:14px;font-size:13px;font-weight:600;color:var(--ok)}
+.pv-status{display:flex;flex-wrap:wrap;gap:8px 22px;padding:14px 8px 0;font-size:12px;color:var(--tx2)}
+.ps{display:inline-flex;align-items:center;gap:8px}.ps.ok .i{color:var(--ok)}
+.pv-msg{flex-basis:100%;font-size:12px;color:var(--tx3)}
+.pv-msg.warn{color:var(--warn)}
+.btn.primary.is-off{opacity:.5;box-shadow:none}
+.btn.primary.is-off:hover{background:var(--btn-red);transform:none;box-shadow:none}
+.pt-line{margin-top:12px;font-size:13px;color:var(--tx2);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.pt-line .lbl{font-size:11px;color:var(--tx3)}
+.cctx{padding:22px 24px;margin-top:16px}
+.cctx .head{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.cctx .head .tag2{font-size:12px;color:var(--tx3)}
+.cgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 24px}
+.cgrid dt{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);font-weight:600}
+.cgrid dd{font-size:15px;color:var(--tx);margin-top:2px}
+@media (min-width:1181px){body:not(.present) #stage{position:sticky;top:88px}}
+@media (max-width:820px){.wf{grid-template-columns:1fr 1fr}.wf small{display:none}.cgrid{grid-template-columns:1fr 1fr}}
+@media (max-width:440px){.g2{grid-template-columns:1fr}.ynr{flex-direction:column;align-items:flex-start;gap:6px}}
+
+/* pipeline */
+.pipeline{padding:28px}
+.pipeline h3{font-size:20px;letter-spacing:-.01em;margin:10px 0 6px}
+.pipeline #plMsg{font-size:14px;color:var(--tx2);min-height:22px;margin-bottom:22px}
+.pl{list-style:none;position:relative;margin-top:24px}
+.pl li{display:grid;grid-template-columns:28px 1fr auto;gap:14px;align-items:center;padding:9px 0;position:relative;color:var(--tx3);font-size:14px;transition:color .3s}
+.pl li::before{content:"";position:absolute;left:13px;top:-18px;bottom:18px;width:1px;background:var(--line)}
+.pl li:first-child::before{display:none}
+.pl li.done::before,.pl li.active::before{background:var(--ok)}
+.pl .nd{width:28px;height:28px;border-radius:50%;border:1px solid var(--line-hi);display:grid;place-items:center;background:var(--card);position:relative;z-index:1;transition:all .3s}
+.pl .nd .i{width:14px;height:14px;opacity:0;transform:scale(.6);transition:all .3s var(--ease)}
+.pl .idx{font-size:11px;letter-spacing:.1em;color:var(--tx3)}
+.pl li.active{color:var(--tx)}
+.pl li.active .nd{border-color:rgba(255,90,95,.7)}
+.pl li.active .nd::after{content:"";position:absolute;inset:-1px;border-radius:50%;border:2px solid transparent;border-top-color:var(--red-br);animation:spin2 .8s linear infinite}
+@keyframes spin2{to{transform:rotate(360deg)}}
+.pl li.done{color:var(--tx)}
+.pl li.done .nd{background:rgba(54,201,143,.14);border-color:rgba(54,201,143,.55);color:var(--ok)}
+.pl li.done .nd .i{opacity:1;transform:none}
+.pl li.fail{color:var(--warn)}
+.pl li.fail .nd{border-color:var(--warn);color:var(--warn);background:rgba(242,184,75,.1)}
+.pl li.fail .nd .i{opacity:1;transform:none}
+.pl li.skipped{opacity:.4}
+
+/* rejected / error */
+.reject{padding:32px}
+.reject h2{font-size:clamp(24px,2.2vw,30px);margin:16px 0 10px}
+.reject p.lead{color:var(--tx2);font-size:14px;margin-bottom:22px}
+.reject h4{font-size:13px;letter-spacing:.12em;color:var(--tx2);margin:26px 0 12px;font-weight:600;text-transform:uppercase}
+.reasons{display:flex;flex-wrap:wrap;gap:8px}
+.recap{list-style:none;counter-reset:s;display:grid;gap:10px;margin-bottom:26px}
+.recap li{counter-increment:s;display:flex;gap:12px;font-size:14px;color:var(--tx)}
+.recap li::before{content:counter(s);width:24px;height:24px;border-radius:50%;border:1px solid var(--line-hi);display:grid;place-items:center;font-size:12px;color:var(--tx2);flex:none}
+.qmini{display:grid;gap:12px}
+
+/* bars */
+.mrow{display:grid;grid-template-columns:104px 1fr 38px;gap:12px;align-items:center;font-size:13px;color:var(--tx2)}
+.mrow b{font-weight:600;color:var(--tx);text-align:right;font-variant-numeric:tabular-nums}
+.bar{height:6px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
+.bar i{display:block;height:100%;width:0;border-radius:99px;background:var(--tx2);transition:width 1s var(--ease) .35s}
+.in .bar i,.bar.go i{width:var(--w)}
+.bar i.ok{background:var(--ok)}.bar i.warn{background:var(--warn)}.bar i.red{background:var(--red)}.bar i.info{background:var(--info)}
+
+/* ============================================================
+   RESULTS
+   ============================================================ */
+.res-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;margin-bottom:32px}
+.res-head p{color:var(--tx2);margin-top:8px}
+.res-tools{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.cid{font-size:12px;color:var(--tx2);padding:5px 12px;border:1px solid var(--line-hi);border-radius:8px;letter-spacing:.06em}
+.rc-grid{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:16px;align-items:stretch}
+.rc{padding:28px;display:flex;flex-direction:column;gap:14px}
+.rc.l2{padding:24px}
+.q-score{font-size:clamp(44px,4vw,56px);font-weight:700;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.q-score small{font-size:.5em;color:var(--tx2);margin-left:2px}
+.st{display:inline-flex;align-items:center;gap:10px;font-size:13px;font-weight:600;letter-spacing:.1em}
+.st.ok{color:var(--ok)}.st.warn{color:var(--warn)}.st.red{color:var(--red-br)}
+.rc .mini{display:grid;gap:10px;margin-top:6px}
+.note-ok{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--ok);margin-top:auto;padding-top:6px}
+.sev-value{font-size:clamp(46px,5vw,72px);font-weight:700;letter-spacing:-.035em;line-height:1}
+.conf{display:flex;align-items:center;gap:16px}
+.conf svg{width:64px;height:64px;transform:rotate(-90deg)}
+.conf .trk{stroke:rgba(255,255,255,.08)}
+.conf .val{stroke:var(--red);stroke-linecap:round;stroke-dasharray:150.8;stroke-dashoffset:150.8;transition:stroke-dashoffset 1.2s var(--ease) .4s}
+.conf .val.ok{stroke:var(--ok)}.conf .val.warn{stroke:var(--warn)}
+.in .conf .val{stroke-dashoffset:var(--off)}
+.conf b{font-size:24px;font-weight:600;font-variant-numeric:tabular-nums}
+.conf>div>span{display:block;font-size:13px;color:var(--tx2)}
+.scale{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:auto;padding-top:8px}
+.scale i{height:6px;border-radius:3px;background:rgba(255,255,255,.08);display:block}
+.scale i.on{background:var(--red)}.scale i.on.ok{background:var(--ok)}.scale i.on.warn{background:var(--warn)}
+.scale-l{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;font-size:11px;color:var(--tx3)}
+.scale-l span.on{color:var(--tx)}
+.ref-value{font-size:clamp(40px,4vw,56px);font-weight:700;letter-spacing:-.03em;line-height:1}
+.ref-value.red{color:var(--red-br)}.ref-value.ok{color:var(--ok)}.ref-value.warn{color:var(--warn)}
+.rc p.sub{color:var(--tx2);font-size:14px}
+.banner{display:flex;align-items:center;gap:18px;margin-top:16px;padding:18px 24px;border-radius:12px;background:linear-gradient(90deg,rgba(229,72,77,.12),rgba(229,72,77,.03));border:1px solid rgba(255,90,95,.3);border-left:3px solid var(--red)}
+.banner.ok{background:linear-gradient(90deg,rgba(54,201,143,.1),rgba(54,201,143,.02));border-color:rgba(54,201,143,.3);border-left-color:var(--ok)}
+.banner.warn{background:linear-gradient(90deg,rgba(242,184,75,.1),rgba(242,184,75,.02));border-color:rgba(242,184,75,.3);border-left-color:var(--warn)}
+.banner .i{width:22px;height:22px;color:var(--red-br)}.banner.ok .i{color:var(--ok)}.banner.warn .i{color:var(--warn)}
+.banner b{display:block;font-size:16px;letter-spacing:.06em}
+.banner span{font-size:14px;color:var(--tx2)}
+.banner .pill{margin-left:auto}
+.prob{padding:28px;margin-top:16px}
+.prob .head{display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.prob .head h3{font-size:14px;letter-spacing:.12em;color:var(--tx2);text-transform:uppercase;font-weight:600}
+.prob .head span{font-size:13px;color:var(--tx3)}
+.prow{display:grid;grid-template-columns:120px 1fr 52px;gap:16px;align-items:center;padding:7px 0;font-size:14px;color:var(--tx2)}
+.prow b{text-align:right;font-weight:600;font-variant-numeric:tabular-nums;color:var(--tx2)}
+.prow .bar{height:10px}
+.prow.top{color:var(--tx)}.prow.top b{color:var(--tx)}
+.prow.top .bar i{background:var(--red)}
+.chart-note{font-size:12px;color:var(--tx3);margin-top:14px}
+.proto{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--tx3);padding:5px 12px;border:1px dashed var(--line-hi);border-radius:8px}
+
+/* explainability */
+.sec-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;margin-bottom:28px}
+.sec-head p{color:var(--tx2);margin-top:10px}
+.seg{display:inline-flex;padding:4px;border-radius:11px;background:var(--surface);border:1px solid var(--line)}
+.seg button{height:34px;padding:0 16px;border-radius:8px;font-size:12px;font-weight:600;letter-spacing:.08em;color:var(--tx2);transition:background .2s,color .2s}
+.seg button:hover{color:var(--tx)}
+.seg button[aria-selected="true"]{background:var(--btn-red);color:#fff}
+.xai-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.xpanel{padding:14px 14px 18px;display:flex;flex-direction:column}
+.xhead{display:flex;justify-content:space-between;align-items:center;padding:6px 8px 14px;font-size:13px;font-weight:600;letter-spacing:.12em;color:var(--tx)}
+.tag{font-size:11px;letter-spacing:.1em;color:var(--red-br);border:1px solid rgba(255,90,95,.4);border-radius:6px;padding:3px 9px;font-weight:600}
+.xframe{position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;background:#020507;border:1px solid var(--line);cursor:crosshair;--ox:50%;--oy:50%}
+.xframe img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform-origin:var(--ox) var(--oy);transition:transform .45s var(--ease),opacity .5s ease}
+.xframe:hover img{transform:scale(1.4)}
+.xframe .heat{opacity:0}
+.xframe[data-mode="attention"] .heat{opacity:1}
+.xframe[data-mode="overlay"] .heat{opacity:var(--o,.55)}
+.xh{position:absolute;left:var(--ox);top:var(--oy);width:0;height:0;pointer-events:none;opacity:0;transition:opacity .2s}
+.xframe:hover .xh{opacity:1}
+.xh::before,.xh::after{content:"";position:absolute;background:rgba(255,255,255,.75)}
+.xh::before{left:-11px;top:0;width:22px;height:1px}.xh::after{top:-11px;left:0;height:22px;width:1px}
+.fs{position:absolute;right:10px;bottom:10px;width:34px;height:34px;display:grid;place-items:center;border-radius:8px;background:rgba(6,12,18,.82);border:1px solid var(--line-hi);color:var(--tx);z-index:2;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);transition:border-color .2s}
+.fs:hover{border-color:rgba(255,255,255,.4)}
+.xcap{font-size:13px;color:var(--tx2);padding:14px 8px 0;line-height:1.5}
+.colorbar{display:flex;align-items:center;gap:12px;padding:12px 8px 0;font-size:11px;color:var(--tx3)}
+.colorbar i{flex:1;height:6px;border-radius:3px;background:linear-gradient(90deg,#1E3A78,#2F8DC8,#3CC796,#F2D03C,#FF463C);max-width:200px}
+.ovl{display:flex;align-items:center;gap:12px;padding:12px 8px 0;font-size:12px;color:var(--tx2)}
+.ovl input{accent-color:var(--red);flex:1;max-width:220px}
+.xai-fade{opacity:0;transition:opacity 1s ease .2s}
+.in .xai-fade,.xai-fade.in{opacity:1}
+
+/* evidence */
+.ev-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.ev{padding:22px;display:flex;flex-direction:column;gap:10px;min-height:150px}
+.ev .ico{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;border:1px solid var(--line-hi);color:var(--tx3)}
+.ev.on .ico{color:var(--red-br);border-color:rgba(255,90,95,.4);background:rgba(229,72,77,.08)}
+.ev-name{font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+.ev.off .ev-name{color:var(--tx2)}
+.ev p{font-size:13px;color:var(--tx3)}
+.ev .pill{align-self:flex-start;margin-top:auto}
+.ev-foot{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-top:20px;flex-wrap:wrap}
+.ev-foot p{font-size:13px;color:var(--tx3);max-width:560px}
+
+/* trace + human review */
+.two-col{display:grid;grid-template-columns:minmax(280px,.8fr) 1.6fr;gap:16px;align-items:stretch}
+.trace-card{padding:28px}
+.trace{list-style:none;position:relative;margin-top:6px}
+.trace::before{content:"";position:absolute;left:13px;top:14px;bottom:14px;width:2px;background:var(--line)}
+.tl-fill{position:absolute;left:13px;top:14px;width:2px;height:0;background:var(--ok);transition:height 1.6s var(--ease) .3s}
+.in .tl-fill{height:calc(100% - 28px)}
+.trace li{display:flex;align-items:center;gap:16px;padding:8px 0;font-size:14px;position:relative}
+.trace .nd{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--card);border:1px solid rgba(54,201,143,.55);color:var(--ok);flex:none;position:relative;z-index:1}
+.trace .nd .i{width:14px;height:14px}
+.trace small{color:var(--tx3);font-size:11px;letter-spacing:.1em;margin-left:auto}
+.trace li{opacity:0;transform:translateX(-6px);transition:opacity .4s ease,transform .4s var(--ease);transition-delay:calc(var(--k)*200ms + 250ms)}
+.in .trace li{opacity:1;transform:none}
+.hr-card{padding:28px;display:flex;flex-direction:column}
+.hr-card h3{font-size:24px;letter-spacing:-.02em}
+.hr-card .sub{color:var(--tx2);font-size:14px;margin:8px 0 28px}
+.hr-flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1fr;align-items:center;gap:8px;margin-bottom:28px}
+.hr-node{display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:12px;border:1px solid var(--line);background:var(--surface);min-height:104px}
+.hr-node .i{color:var(--tx3)}
+.hr-node b{font-size:12px;letter-spacing:.1em;font-weight:600}
+.hr-node small{font-size:12px;color:var(--tx3);margin-top:auto}
+.hr-node.done{border-color:rgba(54,201,143,.35)}.hr-node.done .i{color:var(--ok)}
+.hr-node.now{border-color:rgba(255,90,95,.5);background:rgba(229,72,77,.06)}.hr-node.now .i{color:var(--red-br)}
+.hr-node.queued{border-color:rgba(91,167,255,.5);background:rgba(91,167,255,.06)}.hr-node.queued .i{color:var(--info)}
+.hr-arrow{color:var(--tx3)}
+.hr-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:auto;align-items:center}
+.hr-status{font-size:13px;color:var(--tx2);margin-left:auto;display:flex;align-items:center;gap:8px}
+.disc{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);font-size:13px;color:var(--tx2);display:flex;gap:10px;align-items:center}
+.disc .i{color:var(--tx3)}
+
+/* reveal */
+.reveal{opacity:0;transform:translateY(16px);transition:opacity .6s var(--ease),transform .6s var(--ease);transition-delay:var(--d,0ms)}
+.reveal.in{opacity:1;transform:none}
+
+/* ============================================================
+   PAGES: cases / reports / system
+   ============================================================ */
+.page{padding:clamp(40px,6vh,72px) 0 80px}
+.page-head p{color:var(--tx2);margin-top:10px;max-width:560px}
+.tbl-wrap{margin-top:32px;overflow-x:auto;padding:0}
+table.tbl{width:100%;border-collapse:collapse;min-width:640px}
+.tbl th{text-align:left;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);font-weight:600;padding:16px 24px;border-bottom:1px solid var(--line)}
+.tbl td{padding:18px 24px;border-bottom:1px solid var(--line);font-size:14px;vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.tbl tbody tr{cursor:pointer;transition:background .15s}
+.tbl tbody tr:hover,.tbl tbody tr:focus-visible{background:rgba(255,255,255,.035)}
+.tbl td.id{font-weight:600;letter-spacing:.04em}
+.tbl td.go{text-align:right;color:var(--tx3)}
+.rp-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:32px}
+.rp-card{padding:24px;display:flex;flex-direction:column;gap:14px}
+.rp-card .top{display:flex;justify-content:space-between;align-items:center}
+.rp-card h3{font-size:22px}
+.rp-card .kv{display:flex;justify-content:space-between;font-size:14px;color:var(--tx2);padding:8px 0;border-top:1px solid var(--line)}
+.rp-card .kv b{color:var(--tx);font-weight:600}
+.sys-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;margin-top:32px;align-items:start}
+.sys-list{padding:8px 24px}
+.sys-row{display:flex;align-items:center;gap:16px;padding:18px 0;border-bottom:1px solid var(--line)}
+.sys-row:last-child{border-bottom:0}
+.sys-row .i{color:var(--tx3)}
+.sys-row b{display:block;font-size:13px;letter-spacing:.1em}
+.sys-row span.d{font-size:13px;color:var(--tx3)}
+.sys-row .st{margin-left:auto}
+.dev{padding:24px}
+.dev label{display:flex;align-items:center;gap:12px;font-size:14px;color:var(--tx2);cursor:pointer;margin-top:12px}
+.dev input{accent-color:var(--red);width:16px;height:16px}
+details.contract{margin-top:16px;padding:20px 24px}
+details.contract summary{cursor:pointer;font-size:13px;letter-spacing:.1em;font-weight:600;color:var(--tx2);text-transform:uppercase}
+details.contract pre{margin-top:16px;font-size:12px;line-height:1.6;color:var(--tx2);overflow:auto;max-height:420px;padding:16px;background:var(--bg2);border-radius:10px;border:1px solid var(--line);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.view.enter{animation:viewIn .4s var(--ease)}
+@keyframes viewIn{from{opacity:0;transform:translateY(10px) scale(.99)}to{opacity:1;transform:none}}
+footer{border-top:1px solid var(--line);padding:28px 0 40px;margin-top:40px;font-size:13px;color:var(--tx3)}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+/* ============================================================
+   MODALS
+   ============================================================ */
+.modal{position:fixed;inset:0;z-index:100;background:rgba(3,7,11,.92);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:flex;flex-direction:column;animation:fadeM .25s ease}
+@keyframes fadeM{from{opacity:0}to{opacity:1}}
+.modal-bar{display:flex;align-items:center;gap:16px;padding:14px clamp(16px,3vw,32px);border-bottom:1px solid var(--line);background:rgba(7,16,24,.9)}
+.modal-bar h3{font-size:14px;letter-spacing:.12em;text-transform:uppercase}
+.modal-bar .sp{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.modal-body{flex:1;overflow:auto;padding:24px clamp(16px,3vw,32px)}
+.vw{display:flex;flex-direction:column;height:100%;max-width:1100px;margin:0 auto;width:100%}
+.vw-frame{position:relative;flex:1;min-height:320px;background:#020507;border:1px solid var(--line);border-radius:12px;overflow:hidden;touch-action:none}
+.vw-foot{padding-top:16px;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-size:13px;color:var(--tx2)}
+.legend{display:flex;gap:18px;flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.legend i{width:12px;height:12px;border-radius:50%;border:2px solid var(--c);display:inline-block}
+.legend span.off{opacity:.45}
+.modal.report-modal{background:rgba(3,7,11,.94)}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:200;background:var(--surface);border:1px solid var(--line-hi);padding:12px 18px;border-radius:10px;font-size:14px;box-shadow:0 20px 40px -10px rgba(0,0,0,.8);display:flex;gap:10px;align-items:center;animation:pop .25s var(--ease)}
+
+/* presentation mode */
+body.present .nav-links,body.present .ver,body.present .sec-hide,body.present .flow{display:none!important}
+body.present .rc-grid{grid-template-columns:.8fr 1.6fr .9fr}
+body.present .sev-value{font-size:clamp(60px,7vw,104px)}
+body.present .xai-grid{grid-template-columns:.85fr 1.3fr}
+body.present .ws-grid{grid-template-columns:1fr}
+body.present .two-col{grid-template-columns:1fr}
+body.present .psum{max-width:560px}
+body.present .intake{max-width:820px}
+body.present .pv-frame{height:clamp(420px,66vh,640px)}
+body.present .ev-grid{grid-template-columns:repeat(4,1fr)}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width:1180px){
+  .hero-grid{grid-template-columns:1fr;min-height:0}
+  .hero-vis{order:-1}
+  .retina-frame{width:min(100%,460px)}
+  .ws-grid{grid-template-columns:1fr}
+  .rc-grid{grid-template-columns:1fr 1fr}
+  .rc-grid .rc:nth-child(2){grid-column:1/-1;order:-1}
+  .ev-grid{grid-template-columns:repeat(2,1fr)}
+  .two-col,.sys-grid{grid-template-columns:1fr}
+  .hr-flow{grid-template-columns:1fr 1fr}
+  .hr-arrow{display:none}
+}
+@media (max-width:820px){
+  .nav-in{gap:16px}
+  .menu-btn{display:flex}
+  .nav-links{position:absolute;top:64px;left:0;right:0;flex-direction:column;padding:12px 20px 20px;background:rgba(7,16,24,.97);border-bottom:1px solid var(--line);display:none}
+  .nav-links.open{display:flex}
+  .nav-links button{height:44px;text-align:left}
+  .ver,.pm-toggle b{display:none}
+  .xai-grid{grid-template-columns:1fr}
+  .flow{flex-wrap:wrap;gap:16px}.flow li{flex:1 1 40%}
+  .chip.c2{right:0}
+  .banner{flex-wrap:wrap}.banner .pill{margin-left:0}
+  .prow{grid-template-columns:96px 1fr 44px;gap:10px}
+}
+@media (max-width:600px){
+  .rc-grid,.ev-grid{grid-template-columns:1fr}
+  .hr-flow{grid-template-columns:1fr}
+  .status span.t{display:none}
+  .two{grid-template-columns:1fr}
+  .pm-toggle{display:none}
+  .upload h3{font-size:22px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;transition-delay:0ms!important}
+  html{scroll-behavior:auto}
+  .a,.hero-vis,.chip,.mk{opacity:1}
+}
+
+/* ============================================================
+   PRINT
+   ============================================================ */
+@media print{
+  body::before,body::after{display:none}
+  body>*:not(#reportModal){display:none!important}
+  #reportModal{position:static!important;background:#fff!important;display:block!important;overflow:visible!important;animation:none!important}
+  #reportModal .modal-bar{display:none!important}
+  #reportModal .modal-body{padding:0!important;overflow:visible!important}
+  #reportSheet{box-shadow:none!important;margin:0!important;max-width:none!important}
+}
+</style>
+
+<!-- Report styles: reused on screen and in the downloaded report file -->
+<style id="reportCss">
+#reportSheet{max-width:860px;margin:0 auto;background:#fff;color:#14202B;font:400 13px/1.5 Inter,system-ui,sans-serif;padding:48px 52px;border-radius:6px;box-shadow:0 30px 80px -20px rgba(0,0,0,.7)}
+#reportSheet *{box-sizing:border-box}
+#reportSheet .rp-h{display:flex;justify-content:space-between;align-items:center;padding-bottom:18px;border-bottom:2px solid #14202B}
+#reportSheet .rp-brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.14em;font-size:15px}
+#reportSheet .rp-brand b{color:#CF3238}
+#reportSheet .rp-title{font-size:12px;letter-spacing:.16em;font-weight:600;color:#4A5B69}
+#reportSheet h4{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#5B6B78;margin:26px 0 10px;font-weight:600}
+#reportSheet .rp-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:20px}
+#reportSheet .rp-meta div span{display:block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#7A8894}
+#reportSheet .rp-meta div b{font-size:14px;font-weight:600}
+#reportSheet .rp-imgs{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+#reportSheet .rp-imgs figure{margin:0}
+#reportSheet .rp-imgs img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;background:#000;display:block}
+#reportSheet .rp-imgs figcaption{font-size:11px;color:#5B6B78;margin-top:6px}
+#reportSheet table{width:100%;border-collapse:collapse}
+#reportSheet td,#reportSheet th{padding:9px 0;border-bottom:1px solid #E3E8EC;text-align:left;font-size:13px;vertical-align:top}
+#reportSheet th{font-weight:500;color:#5B6B78;width:36%}
+#reportSheet td b{font-weight:600}
+#reportSheet .act{display:inline-block;padding:2px 10px;border-radius:99px;font-weight:700;font-size:12px;letter-spacing:.06em;color:#fff;background:#CF3238}
+#reportSheet .act.ok{background:#1E9E6A}#reportSheet .act.warn{background:#B7791F}
+#reportSheet .two{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+#reportSheet .sign{margin-top:28px;border:1px dashed #A9B4BD;border-radius:6px;padding:16px 18px;display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:20px;font-size:11px;color:#5B6B78}
+#reportSheet .sign div{border-top:1px solid #14202B;padding-top:6px;margin-top:22px}
+#reportSheet .rp-disc{margin-top:26px;padding-top:14px;border-top:1px solid #E3E8EC;font-size:12px;color:#4A5B69}
+@media (max-width:640px){#reportSheet{padding:28px 20px}#reportSheet .rp-meta{grid-template-columns:1fr 1fr}#reportSheet .two{grid-template-columns:1fr}#reportSheet .sign{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- ICON SPRITE -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+<defs>
+<symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></symbol>
+<symbol id="i-zin" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8v6"/><path d="M8 11h6"/></symbol>
+<symbol id="i-zout" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M8 11h6"/></symbol>
+<symbol id="i-max" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></symbol>
+<symbol id="i-reset" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></symbol>
+<symbol id="i-print" viewBox="0 0 24 24"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="6" y="14" width="12" height="8" rx="1"/></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+<symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 12h16"/><path d="M4 6h16"/><path d="M4 18h16"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/></symbol>
+<symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+<symbol id="i-layers" viewBox="0 0 24 24"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></symbol>
+<symbol id="i-dots" viewBox="0 0 24 24"><circle cx="7" cy="8" r="1.6"/><circle cx="16" cy="7" r="1.1"/><circle cx="12" cy="13" r="1.4"/><circle cx="6" cy="16" r="1"/><circle cx="17" cy="16" r="1.6"/></symbol>
+<symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></symbol>
+<symbol id="i-grain" viewBox="0 0 24 24"><circle cx="8" cy="8" r="2.5"/><circle cx="16" cy="10" r="2"/><circle cx="10" cy="16" r="2.2"/><circle cx="17" cy="17" r="1.3"/></symbol>
+<symbol id="i-cloud" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></symbol>
+<symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2M15 20v2M2 15h2M2 9h2M20 15h2M20 9h2M9 2v2M9 20v2"/></symbol>
+<symbol id="i-gauge" viewBox="0 0 24 24"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+</defs>
+</svg>
+
+<!-- NAV -->
+<header class="nav">
+  <div class="nav-in">
+    <a class="brand" href="#" data-nav="screening" aria-label="DrishtiXAI home">
+      <svg class="logo" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <circle cx="16" cy="16" r="14.5" stroke="rgba(255,255,255,.3)"/>
+        <circle cx="16" cy="16" r="9.5" stroke="#E5484D" stroke-width="1.6"/>
+        <circle cx="16" cy="16" r="3.2" fill="#E5484D"/>
+        <path d="M16 6.5C13.4 8.8 12.2 11.5 10.6 13.6M16 25.5c2.6-2.3 3.8-5 5.4-7.1M4 16h3.6M24.4 16H28" stroke="rgba(255,255,255,.55)" stroke-linecap="round"/>
+      </svg>
+      <span class="brand-name">DRISHTI<b>X</b>AI</span>
+    </a>
+    <nav class="nav-links" id="navLinks" aria-label="Primary">
+      <button data-nav="screening" class="active">Screening</button>
+      <button data-nav="cases">Cases</button>
+      <button data-nav="reports">Reports</button>
+      <button data-nav="system">System</button>
+    </nav>
+    <div class="nav-right">
+      <button class="pm-toggle" id="pmToggle" aria-pressed="false" title="Cleaner layout for live demos"><span class="sw"></span><b style="font-weight:500">Presentation mode</b></button>
+      <span class="status"><i class="dot ok pulse" id="sysStatusDot"></i><span class="t" id="sysStatusText">SYSTEM READY</span></span>
+      <span class="ver">v0.1 Prototype</span>
+      <button class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false"><svg class="i"><use href="#i-menu"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- ================= SCREENING VIEW ================= -->
+  <div class="view" id="view-screening">
+
+    <section class="hero" id="hero" aria-labelledby="heroTitle">
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <div class="eyebrow a" style="--i:0"><i class="dot red"></i>AI-assisted retinal screening</div>
+          <h1 id="heroTitle" class="a" style="--i:1">SEE THE SIGNAL.<br><span>UNDERSTAND THE DECISION.</span></h1>
+          <p class="lede a" style="--i:2">Explainable diabetic retinopathy screening designed for resource-constrained healthcare workflows.</p>
+          <div class="cta a" style="--i:3">
+            <button class="btn primary lg cta-ring" id="ctaStart">START SCREENING <svg class="i"><use href="#i-arrow"/></svg></button>
+            <button class="btn secondary lg" id="ctaDemo">VIEW DEMO</button>
+          </div>
+          <ol class="flow a sec-hide" style="--i:4" aria-label="Screening workflow">
+            <li><b>01</b>Image quality check</li>
+            <li><b>02</b>Severity and confidence</li>
+            <li><b>03</b>Visual evidence</li>
+            <li><b>04</b>Clinician review</li>
+          </ol>
+        </div>
+        <div class="hero-vis">
+          <div class="retina-frame" id="heroFrame">
+            <div class="glow"></div>
+            <svg class="rings" viewBox="0 0 520 520" fill="none" aria-hidden="true">
+              <circle cx="260" cy="260" r="256" stroke="rgba(255,255,255,.07)"/>
+              <circle cx="260" cy="260" r="240" stroke="rgba(255,255,255,.12)" stroke-dasharray="2 6"/>
+              <circle cx="260" cy="260" r="218" stroke="rgba(255,255,255,.1)"/>
+              <path id="heroArc" stroke="#E5484D" stroke-width="2" stroke-linecap="round"/>
+              <g id="ticks" stroke="rgba(255,255,255,.28)"></g>
+              <g fill="#7D8D99" font-size="9" font-family="Inter,sans-serif" letter-spacing="1" text-anchor="middle">
+                <text x="260" y="14">90°</text><text x="510" y="264">0°</text><text x="260" y="514">270°</text><text x="10" y="264">180°</text>
+              </g>
+            </svg>
+            <div class="retina-img"><img id="heroImg" alt="Synthetic retinal fundus image inside a scanning frame"><div class="sweep"></div></div>
+            <span class="chip c1" id="chipField">RETINAL FIELD <small>45°</small></span>
+            <span class="chip c2" id="chipQ">IMAGE QUALITY <small>--</small></span>
+            <span class="chip c3"><i class="dot ok pulse"></i>AI READY</span>
+            <span class="mk" id="mkMac"><span>MACULA</span></span>
+            <span class="mk left" id="mkDisc"><span>OPTIC DISC</span></span>
+          </div>
+          <p class="hero-note sec-hide">Synthetic demonstration image. No real patient data is shown.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="workspace" aria-labelledby="wsTitle">
+      <div class="wrap">
+        <div class="ws-head">
+          <div>
+            <div class="eyebrow">AI-assisted retinal analysis</div>
+            <h2 id="wsTitle">NEW SCREENING</h2>
+          </div>
+          <div class="demo-menu">
+            <button class="btn-text" id="demoBtn" aria-haspopup="true" aria-expanded="false">Try a demo case <svg class="i sm"><use href="#i-arrow"/></svg></button>
+            <div class="menu" id="demoMenu" role="menu" hidden>
+              <button role="menuitem" data-demo="healthy"><svg class="i"><use href="#i-eye"/></svg><span>Healthy Retina<small>No DR expected</small></span></button>
+              <button role="menuitem" data-demo="moderate"><svg class="i"><use href="#i-scan"/></svg><span>Moderate DR<small>Referral pathway</small></span></button>
+              <button role="menuitem" data-demo="poor"><svg class="i"><use href="#i-alert"/></svg><span>Poor Quality<small>Recapture pathway</small></span></button>
+              <div class="foot">Demo images are synthetic fixtures.</div>
+            </div>
+          </div>
+        </div>
+        <ol class="wf sec-hide" id="wf" aria-label="Screening workflow"></ol>
+        <div id="wsError" aria-live="assertive"></div>
+        <div class="ws-grid" id="wsGrid">
+          <div id="stage"></div>
+          <aside class="side" id="side" aria-label="Case information and progress"></aside>
+        </div>
+      </div>
+    </section>
+
+    <section id="results" hidden aria-label="Screening result"><div class="wrap" id="resultsInner"></div></section>
+  </div>
+
+  <!-- ================= CASES ================= -->
+  <div class="view" id="view-cases" hidden>
+    <div class="wrap page">
+      <div class="page-head">
+        <div class="eyebrow">Screening records</div>
+        <h2>CASES</h2>
+        <p>Select a case to open its screening result. Persisted in backend database.</p>
+      </div>
+      <div class="card tbl-wrap"><table class="tbl" id="casesTbl"></table></div>
+    </div>
+  </div>
+
+  <!-- ================= REPORTS ================= -->
+  <div class="view" id="view-reports" hidden>
+    <div class="wrap page">
+      <div class="page-head">
+        <div class="eyebrow">Report library</div>
+        <h2>REPORTS</h2>
+        <p>Screening reports generated from completed cases. Rejected images do not produce a report.</p>
+      </div>
+      <div class="rp-list" id="rpList"></div>
+    </div>
+  </div>
+
+  <!-- ================= SYSTEM ================= -->
+  <div class="view" id="view-system" hidden>
+    <div class="wrap page">
+      <div class="page-head">
+        <div class="eyebrow">System Telemetry &amp; Model Metadata</div>
+        <h2>SYSTEM STATUS</h2>
+        <p>Live status and versions of backend AI modules, database, and inference pipelines.</p>
+      </div>
+      <div class="sys-grid">
+        <div>
+          <div class="card sys-list" id="sysList"></div>
+          <details class="card l3 contract">
+            <summary>Result data contract</summary>
+            <pre id="contractPre"></pre>
+          </details>
+        </div>
+        <div class="card dev">
+          <h3 class="ch">Developer tools</h3>
+          <p class="hint" style="font-size:14px;color:var(--tx2)">Use these to test error handling or backend connectivity.</p>
+          <label><input type="checkbox" id="simErr"> Simulate analysis failure on the next run</label>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>DRISHTIXAI · SIH26038 Prototype</span>
+    <span>AI-assisted screening prototype. Final assessment requires qualified clinical evaluation.</span>
+  </div>
+</footer>
+
+<!-- IMAGE VIEWER MODAL -->
+<div class="modal" id="viewer" role="dialog" aria-modal="true" aria-labelledby="vTitle" hidden>
+  <div class="modal-bar">
+    <h3 id="vTitle"></h3>
+    <div class="sp">
+      <button class="tool" id="vIn" aria-label="Zoom in"><svg class="i sm"><use href="#i-zin"/></svg></button>
+      <button class="tool" id="vOut" aria-label="Zoom out"><svg class="i sm"><use href="#i-zout"/></svg></button>
+      <button class="tool" id="vReset" aria-label="Reset view"><svg class="i sm"><use href="#i-reset"/></svg></button>
+      <button class="tool" id="vClose" aria-label="Close viewer"><svg class="i sm"><use href="#i-x"/></svg></button>
+    </div>
+  </div>
+  <div class="modal-body">
+    <div class="vw">
+      <div class="vw-frame" id="vFrame"><div class="stack" id="vStack"></div></div>
+      <div class="vw-foot"><div id="vCap"></div><div class="legend" id="vLegend"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- REPORT MODAL -->
+<div class="modal report-modal" id="reportModal" role="dialog" aria-modal="true" aria-labelledby="rmTitle" hidden>
+  <div class="modal-bar">
+    <h3 id="rmTitle">Screening report preview</h3>
+    <div class="sp">
+      <button class="btn secondary sm" id="rpDownload"><svg class="i sm"><use href="#i-download"/></svg>DOWNLOAD PDF REPORT</button>
+      <button class="btn secondary sm" id="rpPrint"><svg class="i sm"><use href="#i-print"/></svg>PRINT</button>
+      <button class="tool" id="rpClose" aria-label="Close report"><svg class="i sm"><use href="#i-x"/></svg></button>
+    </div>
+  </div>
+  <div class="modal-body"><div id="reportSheet"></div></div>
+</div>
+
+<div id="toastHost" aria-live="polite"></div>
+
+<script>
+(() => {
+'use strict';
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+const $  = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const ic = (n, cls = '') => `<svg class="i ${cls}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const clone = o => JSON.parse(JSON.stringify(o));
+const pctTxt = v => { const x = (v || 0) * 100; return (Number.isInteger(+x.toFixed(1)) ? x.toFixed(0) : x.toFixed(1)) + '%'; };
+function rng(seed){ let a = seed >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function toast(msg){
+  const t = document.createElement('div'); t.className = 'toast'; t.innerHTML = ic('check', 'sm') + `<span>${esc(msg)}</span>`;
+  $('#toastHost').appendChild(t); setTimeout(() => t.remove(), 3200);
+}
+
+/* ============================================================
+   DATA & CONSTANTS
+   ============================================================ */
+const GRADES = ['No DR', 'Mild', 'Moderate', 'Severe', 'Proliferative'];
+
+const DEMO_CASES = {
+  moderate: {
+    key: 'moderate', label: 'Moderate DR', caseId: 'DR-2026-001',
+    profile: { caseId: 'DR-2026-001', age: '54', sex: 'Female', diabetesType: 'Type 2', diabetesDuration: '8', hba1c: '7.4', bloodGlucose: '168', familyHistory: 'Yes', previousDR: 'No', hypertension: 'Yes', centre: 'Community screening camp', device: 'Handheld fundus camera' },
+    gen: { seed: 11, dr: 2, quality: 'good' },
+    result: {
+      status: 'COMPLETE',
+      quality: { score: 92, status: 'PASS', focus: 94, illumination: 89, field_of_view: 93, reasons: [] },
+      prediction: { grade: 2, label: 'Moderate DR', confidence: 0.912, referable_probability: 0.96,
+        probabilities: { 'No DR': 0.01, 'Mild': 0.03, 'Moderate': 0.91, 'Severe': 0.04, 'Proliferative': 0.01 } },
+      lesions: { microaneurysms: true, hemorrhages: true, hard_exudates: true, soft_exudates: false, overlay_path: '...' },
+      explainability: { gradcam_path: '...', evidence_alignment: 0.84 },
+      decision: { action: 'REFER', reason: 'Referable DR detected (Grade 2). Specialist review recommended.', requires_review: true },
+      metadata: { model_version: 'dr_classifier_v0.1.0', lesion_model_version: 'lesion_unet_v0.1.0', calibration_version: 'calib_v0.1.0', processing_time_ms: 412 }
+    }
+  },
+  healthy: {
+    key: 'healthy', label: 'Healthy Retina', caseId: 'DR-2026-002',
+    profile: { caseId: 'DR-2026-002', age: '41', sex: 'Male', diabetesType: 'Type 2', diabetesDuration: '2', hba1c: '6.1', bloodGlucose: '112', familyHistory: 'No', previousDR: 'No', hypertension: 'No', centre: 'Community screening camp', device: 'Handheld fundus camera' },
+    gen: { seed: 23, dr: 0, quality: 'good' },
+    result: {
+      status: 'COMPLETE',
+      quality: { score: 95, status: 'PASS', focus: 96, illumination: 93, field_of_view: 94, reasons: [] },
+      prediction: { grade: 0, label: 'No DR', confidence: 0.96, referable_probability: 0.02,
+        probabilities: { 'No DR': 0.96, 'Mild': 0.02, 'Moderate': 0.01, 'Severe': 0.005, 'Proliferative': 0.005 } },
+      lesions: { microaneurysms: false, hemorrhages: false, hard_exudates: false, soft_exudates: false, overlay_path: '...' },
+      explainability: { gradcam_path: '...', evidence_alignment: 0.95 },
+      decision: { action: 'ROUTINE', reason: 'No DR detected. Continue routine annual screening.', requires_review: false },
+      metadata: { model_version: 'dr_classifier_v0.1.0', lesion_model_version: 'lesion_unet_v0.1.0', calibration_version: 'calib_v0.1.0', processing_time_ms: 380 }
+    }
+  },
+  poor: {
+    key: 'poor', label: 'Poor Quality', caseId: 'DR-2026-003',
+    profile: { caseId: 'DR-2026-003', age: '63', sex: 'Female', diabetesType: 'Type 2', diabetesDuration: '15', hba1c: '8.9', bloodGlucose: '214', familyHistory: 'Yes', previousDR: 'Unknown', hypertension: 'Yes', centre: 'Community screening camp', device: 'Handheld fundus camera' },
+    gen: { seed: 37, dr: 0, quality: 'poor' },
+    result: {
+      status: 'QUALITY_REJECTED',
+      quality: { score: 41, status: 'FAIL', focus: 32, illumination: 44, field_of_view: 61,
+        reasons: ['Low focus / severe blur', 'Insufficient retinal visibility', 'Uneven illumination'] },
+      prediction: null, lesions: null, explainability: null,
+      decision: { action: 'RECAPTURE', reason: 'Image failed quality gate check. Recapture required.', requires_review: false },
+      metadata: { model_version: 'dr_classifier_v0.1.0', lesion_model_version: 'lesion_unet_v0.1.0', calibration_version: 'calib_v0.1.0', processing_time_ms: 120 }
+    }
+  }
+};
+
+function deriveReferral(p){
+  if (!p) return { action: 'RECAPTURE', tone: 'warn', note: 'Upload a new image', banner: 'RECAPTURE REQUIRED', detail: 'No screening result was generated for this image.' };
+  if (p.grade >= 2) return { action: 'REFER', tone: 'red', note: 'Specialist review recommended', banner: 'REFER FOR SPECIALIST REVIEW', detail: 'The AI-assisted screening result meets the referral threshold. A clinician must review the visual evidence.' };
+  if (p.grade === 1) return { action: 'MONITOR', tone: 'warn', note: 'Follow-up screening advised', banner: 'FOLLOW-UP SCREENING ADVISED', detail: 'Below the referral threshold. Clinician review of the evidence is still recommended.' };
+  return { action: 'ROUTINE', tone: 'ok', note: 'Continue routine screening', banner: 'ROUTINE FOLLOW-UP', detail: 'No referral flag raised. Continue routine screening per local protocol.' };
+}
+const gradeTone = g => g === 0 ? 'ok' : g === 1 ? 'warn' : 'red';
+const scoreTone = v => v >= 80 ? 'ok' : v >= 60 ? 'warn' : 'red';
+
+const LESIONS = [
+  { k: 'microaneurysms', a: 'ma', name: 'Microaneurysms', icon: 'dots',  color: '#FF5A5F', desc: 'Small vessel wall outpouchings' },
+  { k: 'hemorrhages',    a: 'he', name: 'Hemorrhages',    icon: 'drop',  color: '#FF9F5A', desc: 'Bleeding within the retina' },
+  { k: 'hard_exudates',  a: 'hx', name: 'Hard exudates',  icon: 'grain', color: '#F2E36B', desc: 'Lipid deposits from leaking vessels' },
+  { k: 'soft_exudates',  a: 'sx', name: 'Soft exudates',  icon: 'cloud', color: '#5BA7FF', desc: 'Nerve fibre layer infarcts' }
+];
+const PIPELINE = [
+  { name: 'Image received',            done: 'Image received',            msg: 'Receiving retinal image...',        ms: 350 },
+  { name: 'Image quality check',       done: 'Image quality check',        msg: 'Assessing image quality...',        ms: 550 },
+  { name: 'Retinal enhancement',       done: 'Retinal enhancement',        msg: 'Enhancing retinal detail...',       ms: 400 },
+  { name: 'DR severity assessment',    done: 'DR severity assessment',     msg: 'Classifying retinal severity...',   ms: 600 },
+  { name: 'Explainability generation', done: 'Explainability generated',   msg: 'Generating visual explanation...',  ms: 550 },
+  { name: 'Lesion evidence',           done: 'Lesion evidence assembled',  msg: 'Assembling lesion evidence...',     ms: 400 },
+  { name: 'Screening action',          done: 'Screening action generated', msg: 'Generating screening action...',    ms: 350 }
+];
+const DISCLAIMER = 'AI-assisted screening prototype. Final assessment requires qualified clinical evaluation.';
+
+/* ============================================================
+   SYNTHETIC FUNDUS GENERATOR (Demo Fixture fallback)
+   ============================================================ */
+const MAC = { x: .485, y: .52 }, DISC = { x: .702, y: .464 };
+
+function mkLesions(rand, grade){
+  const L = { ma: [], he: [], hx: [], sx: [] };
+  if (!grade) return L;
+  const ok = (x, y) => Math.hypot(x - .5, y - .5) < .37 && Math.hypot(x - DISC.x, y - DISC.y) > .11;
+  const pt = (d0, d1) => { for (let k = 0; k < 60; k++){ const a = rand() * 6.283, d = d0 + rand() * (d1 - d0), x = MAC.x + Math.cos(a) * d, y = MAC.y + Math.sin(a) * d; if (ok(x, y)) return { x, y }; } return { x: MAC.x, y: MAC.y }; };
+  for (let i = 0; i < 30; i++) L.ma.push({ ...pt(.03, .24), r: .0035 + rand() * .003 });
+  for (let i = 0; i < 9; i++)  L.he.push({ ...pt(.06, .28), r: .010 + rand() * .008, rot: rand() * 3 });
+  for (let c = 0; c < 3; c++){ const o = pt(.08, .2), n = 5 + Math.floor(rand() * 5); for (let i = 0; i < n; i++){ const x = o.x + (rand() - .5) * .06, y = o.y + (rand() - .5) * .06; if (ok(x, y)) L.hx.push({ x, y, r: .005 + rand() * .005 }); } }
+  return L;
+}
+
+function makeFundus({ seed = 1, size = 720, dr = 0, quality = 'good' }){
+  const rand = rng(seed), N = size, R = N * .47, cx = N / 2, cy = N / 2;
+  const cv = document.createElement('canvas'); cv.width = cv.height = N;
+  const c = cv.getContext('2d');
+  c.fillStyle = '#040404'; c.fillRect(0, 0, N, N);
+  c.save(); c.beginPath(); c.arc(cx, cy, R, 0, 7); c.clip();
+  const g = c.createRadialGradient(cx - R * .12, cy, R * .05, cx, cy, R);
+  g.addColorStop(0, '#e0782f'); g.addColorStop(.55, '#c24f22'); g.addColorStop(.88, '#8a2f15'); g.addColorStop(1, '#4a1509');
+  c.fillStyle = g; c.fillRect(0, 0, N, N);
+  for (let i = 0; i < 900; i++){
+    const a = rand() * 6.283, d = Math.sqrt(rand()) * R, x = cx + Math.cos(a) * d, y = cy + Math.sin(a) * d, r = 6 + rand() * 26;
+    c.fillStyle = rand() < .5 ? `rgba(70,15,8,${.03 + rand() * .04})` : `rgba(255,170,90,${.02 + rand() * .035})`;
+    c.beginPath(); c.arc(x, y, r, 0, 7); c.fill();
+  }
+  const M = { x: MAC.x * N, y: MAC.y * N }, D = { x: DISC.x * N, y: DISC.y * N };
+  const mg = c.createRadialGradient(M.x, M.y, 0, M.x, M.y, R * .17);
+  mg.addColorStop(0, 'rgba(60,14,6,.55)'); mg.addColorStop(.6, 'rgba(80,20,8,.25)'); mg.addColorStop(1, 'rgba(80,20,8,0)');
+  c.fillStyle = mg; c.fillRect(0, 0, N, N);
+  // optic disc
+  const dR = R * .1;
+  let dg = c.createRadialGradient(D.x, D.y, dR * .3, D.x, D.y, dR * 2.4);
+  dg.addColorStop(0, 'rgba(255,205,130,.35)'); dg.addColorStop(1, 'rgba(255,205,130,0)');
+  c.fillStyle = dg; c.beginPath(); c.arc(D.x, D.y, dR * 2.4, 0, 7); c.fill();
+  dg = c.createRadialGradient(D.x, D.y, 0, D.x, D.y, dR);
+  dg.addColorStop(0, '#fdeeb5'); dg.addColorStop(.7, '#f2c473'); dg.addColorStop(1, '#d98f48');
+  c.fillStyle = dg; c.beginPath(); c.ellipse(D.x, D.y, dR * .92, dR, 0, 0, 7); c.fill();
+  c.fillStyle = 'rgba(255,246,205,.75)'; c.beginPath(); c.ellipse(D.x - dR * .1, D.y, dR * .42, dR * .48, 0, 0, 7); c.fill();
+  // vessels
+  function vessel(x, y, ang, w, len, depth, curve, art){
+    const step = 5, n = Math.floor(len / step); let px = x, py = y;
+    for (let i = 0; i < n; i++){
+      ang += (rand() - .5) * .16 + (i < n * .7 ? curve : 0);
+      const t = i / n, ww = Math.max(.8, w * (1 - t * .55)), nx = px + Math.cos(ang) * step, ny = py + Math.sin(ang) * step;
+      if ((nx - cx) ** 2 + (ny - cy) ** 2 > R * R * .96) break;
+      c.lineCap = 'round';
+      c.strokeStyle = 'rgba(50,8,6,.32)'; c.lineWidth = ww + 1.6; c.beginPath(); c.moveTo(px, py); c.lineTo(nx, ny); c.stroke();
+      c.strokeStyle = art ? 'rgba(178,44,30,.96)' : 'rgba(118,18,22,.96)'; c.lineWidth = ww; c.beginPath(); c.moveTo(px, py); c.lineTo(nx, ny); c.stroke();
+      if (ww > 2.4){ c.strokeStyle = 'rgba(235,120,90,.3)'; c.lineWidth = ww * .28; c.beginPath(); c.moveTo(px, py); c.lineTo(nx, ny); c.stroke(); }
+      if (depth < 3 && ww > 1.1 && rand() < .05){
+        const side = rand() < .5 ? -1 : 1;
+        vessel(nx, ny, ang + side * (.5 + rand() * .5), ww * .72, len * (.35 + rand() * .25) * (1 - t), depth + 1, curve * .3, art);
+      }
+      px = nx; py = ny;
+    }
+  }
+  const P = Math.PI;
+  [[P + .55, 6.5, R * 1.0, -.017, true], [P + .78, 8, R * 1.05, -.02, false], [P - .55, 6.5, R * 1.0, .017, true], [P - .78, 8, R * 1.05, .02, false],
+   [-.32, 5, R * .5, -.012, true], [.36, 5.4, R * .5, .012, false]].forEach(v => vessel(D.x, D.y, v[0], v[1], v[2], 0, v[3], v[4]));
+  // lesions
+  const L = quality === 'poor' ? mkLesions(rand, 0) : mkLesions(rand, dr);
+  L.ma.forEach(l => { c.fillStyle = 'rgba(105,6,14,.92)'; c.beginPath(); c.arc(l.x * N, l.y * N, l.r * N, 0, 7); c.fill(); });
+  L.he.forEach(l => { c.fillStyle = 'rgba(92,5,12,.85)'; c.beginPath(); c.ellipse(l.x * N, l.y * N, l.r * N * 1.3, l.r * N * .85, l.rot, 0, 7); c.fill(); });
+  L.hx.forEach(l => { c.fillStyle = 'rgba(246,228,150,.92)'; c.beginPath(); c.arc(l.x * N, l.y * N, l.r * N, 0, 7); c.fill(); });
+  // vignette
+  const vg = c.createRadialGradient(cx, cy, R * .7, cx, cy, R);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.62)');
+  c.fillStyle = vg; c.fillRect(0, 0, N, N);
+  c.restore();
+  if (quality === 'poor'){
+    let s = cv, w = N; const target = Math.round(N * .08);
+    while (w > target){ const nw = Math.max(target, Math.round(w / 2)), t = document.createElement('canvas'); t.width = t.height = nw; const tc = t.getContext('2d'); tc.imageSmoothingQuality = 'high'; tc.drawImage(s, 0, 0, nw, nw); s = t; w = nw; }
+    c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high'; c.clearRect(0, 0, N, N); c.drawImage(s, 0, 0, N, N);
+    let h = c.createRadialGradient(cx, cy, 0, cx, cy, R); h.addColorStop(0, 'rgba(235,215,195,.28)'); h.addColorStop(1, 'rgba(235,215,195,.05)');
+    c.fillStyle = h; c.beginPath(); c.arc(cx, cy, R, 0, 7); c.fill();
+    const lg = c.createLinearGradient(0, 0, N, 0); lg.addColorStop(0, 'rgba(0,0,0,.78)'); lg.addColorStop(.55, 'rgba(0,0,0,.05)'); lg.addColorStop(1, 'rgba(0,0,0,.35)');
+    c.fillStyle = lg; c.fillRect(0, 0, N, N);
+    c.fillStyle = 'rgba(2,2,2,.82)'; c.beginPath(); c.ellipse(cx, -N * .05, N * .62, N * .3, 0, 0, 7); c.fill();
+  }
+  const id = c.getImageData(0, 0, N, N), d = id.data, amp = quality === 'poor' ? 26 : 9;
+  for (let i = 0; i < d.length; i += 4){ if (d[i] + d[i + 1] + d[i + 2] < 40) continue; const n = (rand() - .5) * amp; d[i] += n; d[i + 1] += n * .8; d[i + 2] += n * .7; }
+  c.putImageData(id, 0, 0);
+  return { canvas: cv, lesions: L, src: cv.toDataURL('image/jpeg', .9) };
+}
+
+/* Helper canvas renderer for client-side demo maps */
+function loadImage(src){ return new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = src; }); }
+function squareCanvas(im, N){
+  const cv = document.createElement('canvas'); cv.width = cv.height = N; const c = cv.getContext('2d');
+  c.fillStyle = '#000'; c.fillRect(0, 0, N, N);
+  const k = N / Math.max(im.width, im.height), w = im.width * k, h = im.height * k;
+  c.drawImage(im, (N - w) / 2, (N - h) / 2, w, h); return cv;
+}
+const CMAP = [[0, [20, 40, 120, 0]], [.2, [30, 90, 190, .3]], [.42, [50, 190, 160, .55]], [.65, [245, 210, 60, .72]], [1, [255, 70, 60, .9]]];
+function cmap(v){
+  for (let i = 1; i < CMAP.length; i++){
+    if (v <= CMAP[i][0]){ const [t0, a] = CMAP[i - 1], [t1, b] = CMAP[i], k = (v - t0) / (t1 - t0); return a.map((x, j) => x + (b[j] - x) * k); }
+  } return CMAP[CMAP.length - 1][1];
+}
+function attentionPoints(L){
+  const pts = [];
+  const add = (arr, w, s) => (arr || []).forEach(l => pts.push({ x: l.x, y: l.y, s, w }));
+  add(L?.he, .55, .05); add(L?.hx, .5, .045); add(L?.ma, .26, .035); add(L?.sx, .5, .05);
+  if (!pts.length) pts.push({ x: DISC.x, y: DISC.y, s: .09, w: .16 }, { x: MAC.x, y: MAC.y, s: .1, w: .12 });
+  return pts;
+}
+function buildEvidence(base, L){
+  const N = 720, n = 360;
+  const f = new Float32Array(n * n);
+  attentionPoints(L).forEach(p => {
+    const px = p.x * n, py = p.y * n, s = p.s * n, inv = 1 / (2 * s * s), r = Math.ceil(s * 3);
+    for (let y = Math.max(0, py - r | 0); y < Math.min(n, py + r); y++) for (let x = Math.max(0, px - r | 0); x < Math.min(n, px + r); x++){
+      const dx = x - px, dy = y - py; f[y * n + x] += p.w * Math.exp(-(dx * dx + dy * dy) * inv);
+    }
+  });
+  const hc = document.createElement('canvas'); hc.width = hc.height = n; const hx = hc.getContext('2d'), hid = hx.createImageData(n, n);
+  const R = n * .47;
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++){
+    const i = y * n + x, dist = Math.hypot(x - n / 2, y - n / 2), m = dist > R ? 0 : Math.min(1, (R - dist) / 6);
+    const [r, g, b, a] = cmap(Math.min(1, f[i]));
+    hid.data[i * 4] = r; hid.data[i * 4 + 1] = g; hid.data[i * 4 + 2] = b; hid.data[i * 4 + 3] = a * m * 255;
+  }
+  hx.putImageData(hid, 0, 0);
+  const gc = document.createElement('canvas'); gc.width = gc.height = N; const g = gc.getContext('2d');
+  g.drawImage(base, 0, 0);
+  const gd = g.getImageData(0, 0, N, N), d = gd.data;
+  for (let i = 0; i < d.length; i += 4){ const l = (d[i] * .3 + d[i + 1] * .59 + d[i + 2] * .11) * .42; d[i] = l * .92; d[i + 1] = l * 1.0; d[i + 2] = l * 1.08; }
+  g.putImageData(gd, 0, 0);
+  g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.drawImage(hc, 0, 0, N, N);
+  const oc = document.createElement('canvas'); oc.width = oc.height = N; const o = oc.getContext('2d');
+  o.drawImage(base, 0, 0); o.fillStyle = 'rgba(4,10,16,.5)'; o.fillRect(0, 0, N, N);
+  o.lineWidth = 2;
+  const ring = (x, y, r, col, dash) => { o.strokeStyle = col; o.setLineDash(dash || []); o.beginPath(); o.arc(x, y, r, 0, 7); o.stroke(); };
+  (L?.ma || []).forEach(l => ring(l.x * N, l.y * N, Math.max(6, l.r * N * 2.6), '#FF5A5F'));
+  (L?.he || []).forEach(l => ring(l.x * N, l.y * N, l.r * N * 1.6 + 5, '#FF9F5A'));
+  (L?.hx || []).forEach(l => ring(l.x * N, l.y * N, Math.max(6, l.r * N * 2), '#F2E36B'));
+  (L?.sx || []).forEach(l => ring(l.x * N, l.y * N, l.r * N * 2 + 5, '#5BA7FF', [4, 3]));
+  return { gradcam: gc.toDataURL('image/jpeg', .88), overlay: oc.toDataURL('image/jpeg', .88) };
+}
+
+/* ============================================================
+   STATE MANAGEMENT & BACKEND INTEGRATION
+   ============================================================ */
+const S = {
+  view: 'screening', stage: 'empty', img: null, res: null,
+  meta: blankMeta(), attempted: false, touched: {}, editIntake: false,
+  review: {}, simError: false, busy: false, ctx: null
+};
+
+/* Real API Backend call with fallback to demo fixture */
+async function analyzeImage(img){
+  await sleep(150);
+  if (S.simError){ S.simError = false; const cb = $('#simErr'); if (cb) cb.checked = false; throw new Error('simulated'); }
+
+  // If this is an explicit demo case fixture click
+  if (img.demo) {
+    const tpl = DEMO_CASES[img.demo].result;
+    const res = clone(tpl);
+    res.timestamp = new Date().toISOString();
+    if (res.quality.status === 'PASS'){
+      const base = squareCanvas(await loadImage(img.src), 720);
+      const ev = buildEvidence(base, img.lesions);
+      res.explainability.gradcam_path = ev.gradcam;
+      res.lesions.overlay_path = ev.overlay;
+    }
+    return res;
+  }
+
+  // REAL UPLOAD -> POST /api/analyze
+  try {
+    const formData = new FormData();
+    const response = await fetch(img.src);
+    const blob = await response.blob();
+    formData.append('image', blob, img.name || 'fundus.jpg');
+    formData.append('case_id', S.meta.caseId || 'DR-2026-001');
+    formData.append('metadata', JSON.stringify(S.meta));
+
+    const apiRes = await fetch('/api/analyze', {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!apiRes.ok) {
+      const err = await apiRes.json().catch(() => ({}));
+      throw new Error(err.detail || `Backend returned HTTP ${apiRes.status}`);
+    }
+
+    const data = await apiRes.json();
+    return data;
+  } catch (err) {
+    console.error("Backend /api/analyze error:", err);
+    throw err; // Real upload fails cleanly instead of fabricating medical results
+  }
+}
+
+const ASSETS = {};
+function demoAsset(key){ return ASSETS[key] || (ASSETS[key] = makeFundus(DEMO_CASES[key].gen)); }
+async function prepareCase(key){
+  const a = demoAsset(key);
+  const img = { src: a.src, lesions: a.lesions, demo: key, name: `${DEMO_CASES[key].label} (demo)` };
+  if (!ASSETS[key].res) ASSETS[key].res = await analyzeImage(img);
+  return { caseId: DEMO_CASES[key].caseId, img, res: ASSETS[key].res, key, meta: { ...DEMO_CASES[key].profile } };
+}
+
+/* ============================================================
+   VIEWS & NAVIGATION
+   ============================================================ */
+function setView(name){
+  S.view = name;
+  $$('.view').forEach(v => v.hidden = v.id !== 'view-' + name);
+  $$('.nav-links button').forEach(b => b.classList.toggle('active', b.dataset.nav === name));
+  const v = $('#view-' + name); v.classList.remove('enter'); void v.offsetWidth; v.classList.add('enter');
+  $('#navLinks').classList.remove('open'); $('#menuBtn').setAttribute('aria-expanded', 'false');
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  if (name === 'cases') renderCases();
+  if (name === 'reports') renderReports();
+  if (name === 'system') renderSystem();
+}
+document.addEventListener('click', e => {
+  const n = e.target.closest('[data-nav]'); if (n){ e.preventDefault(); setView(n.dataset.nav); }
+  if (!e.target.closest('.demo-menu')) closeDemoMenu();
+});
+$('#menuBtn').addEventListener('click', () => { const o = $('#navLinks').classList.toggle('open'); $('#menuBtn').setAttribute('aria-expanded', o); });
+$('#pmToggle').addEventListener('click', e => {
+  const on = document.body.classList.toggle('present'); e.currentTarget.setAttribute('aria-pressed', on);
+  toast(on ? 'Presentation mode on' : 'Presentation mode off');
+});
+
+/* ============================================================
+   HERO
+   ============================================================ */
+function initHero(){
+  const a = demoAsset('moderate'); $('#heroImg').src = a.src;
+  const q = DEMO_CASES.moderate.result.quality.score; $('#chipQ small').textContent = q + '%';
+  const g = $('#ticks'); let s = '';
+  for (let d = 0; d < 360; d += 5){
+    const r0 = d % 30 === 0 ? 232 : 236, r1 = 243, a = d * Math.PI / 180;
+    s += `<line x1="${260 + Math.cos(a) * r0}" y1="${260 + Math.sin(a) * r0}" x2="${260 + Math.cos(a) * r1}" y2="${260 + Math.sin(a) * r1}"/>`;
+  }
+  g.innerHTML = s;
+  const a0 = -60 * Math.PI / 180, a1 = -20 * Math.PI / 180, R = 240;
+  $('#heroArc').setAttribute('d', `M${260 + Math.cos(a0) * R} ${260 + Math.sin(a0) * R} A${R} ${R} 0 0 1 ${260 + Math.cos(a1) * R} ${260 + Math.sin(a1) * R}`);
+  const k = 76 * 1.05;
+  const pos = (el, p) => { el.style.left = (50 + (p.x - .5) * k) + '%'; el.style.top = (50 + (p.y - .5) * k) + '%'; };
+  pos($('#mkMac'), MAC); pos($('#mkDisc'), DISC);
+}
+
+/* ============================================================
+   ZOOM / PAN
+   ============================================================ */
+function zoomPan(frame, stack, opts = {}){
+  let s = 1, x = 0, y = 0, drag = null, actual = false;
+  const apply = () => { stack.style.transform = `translate(${x}px,${y}px) scale(${s})`; frame.classList.toggle('zoomed', s > 1.001); };
+  const clamp = () => { const mx = frame.clientWidth * (s - 1) / 2, my = frame.clientHeight * (s - 1) / 2; x = Math.max(-mx, Math.min(mx, x)); y = Math.max(-my, Math.min(my, y)); };
+  const set = v => { s = Math.max(1, Math.min(6, v)); if (s === 1) x = y = 0; clamp(); apply(); };
+  frame.addEventListener('pointerdown', e => { if (s <= 1 || e.target.closest('button')) return; drag = { x: e.clientX - x, y: e.clientY - y }; frame.setPointerCapture(e.pointerId); frame.classList.add('grabbing'); });
+  frame.addEventListener('pointermove', e => { if (!drag) return; x = e.clientX - drag.x; y = e.clientY - drag.y; clamp(); apply(); });
+  const end = () => { drag = null; frame.classList.remove('grabbing'); };
+  frame.addEventListener('pointerup', end); frame.addEventListener('pointercancel', end);
+  if (opts.wheel) frame.addEventListener('wheel', e => { e.preventDefault(); set(s * (e.deltaY < 0 ? 1.12 : .89)); }, { passive: false });
+  return {
+    zin: () => set(s * 1.3), zout: () => set(s / 1.3), reset: () => { actual = false; set(1); },
+    fit: () => { actual = !actual; const im = stack.querySelector('img'); const disp = Math.min(frame.clientWidth, frame.clientHeight); set(actual ? Math.max(1.5, (im?.naturalWidth || 720) / disp) : 1); return actual; }
+  };
+}
+
+/* ============================================================
+   MODAL VIEWER
+   ============================================================ */
+let lastFocus = null, vzp = null;
+function openViewer({ title, layers, caption, legend }){
+  lastFocus = document.activeElement;
+  $('#vTitle').textContent = title;
+  $('#vStack').innerHTML = layers.map((l, i) => `<img src="${l.src}" alt="${esc(l.alt || title)}" ${i ? `style="opacity:${l.op ?? 1}"` : ''}>`).join('');
+  $('#vCap').textContent = caption || '';
+  $('#vLegend').innerHTML = (legend || []).map(l => `<span class="${l.on ? '' : 'off'}"><i style="--c:${l.color}"></i>${esc(l.name)}${l.on ? '' : ' (not detected)'}</span>`).join('');
+  $('#viewer').hidden = false; document.body.style.overflow = 'hidden';
+  vzp = zoomPan($('#vFrame'), $('#vStack'), { wheel: true }); vzp.reset();
+  $('#vClose').focus();
+}
+function closeViewer(){ $('#viewer').hidden = true; document.body.style.overflow = ''; lastFocus?.focus?.(); }
+$('#vClose').addEventListener('click', closeViewer);
+$('#vIn').addEventListener('click', () => vzp?.zin()); $('#vOut').addEventListener('click', () => vzp?.zout()); $('#vReset').addEventListener('click', () => vzp?.reset());
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (!$('#viewer').hidden) closeViewer();
+  else if (!$('#reportModal').hidden) closeReport();
+  else closeDemoMenu();
+});
+
+/* ============================================================
+   WORKSPACE & PATIENT INTAKE
+   ============================================================ */
+function uploadHTML(){
+  return `<div class="upload" id="dropzone" role="button" tabindex="0" aria-label="Upload a fundus image. Press Enter to browse.">
+    <svg class="scanner" viewBox="0 0 132 132" fill="none" aria-hidden="true">
+      <circle cx="66" cy="66" r="62" stroke="rgba(255,255,255,.12)"/>
+      <circle cx="66" cy="66" r="46" stroke="rgba(255,255,255,.18)" stroke-dasharray="2 5"/>
+      <circle cx="66" cy="66" r="30" stroke="#E5484D" stroke-width="1.6"/>
+      <circle cx="66" cy="66" r="9" fill="#E5484D"/>
+      <g class="spin-arc"><path d="M66 4a62 62 0 0 1 44 18" stroke="#FF5A5F" stroke-width="2" stroke-linecap="round"/></g>
+      <path d="M66 36c-9 6-11 15-16 22M66 96c9-6 11-15 16-22" stroke="rgba(255,255,255,.4)" stroke-linecap="round"/>
+    </svg>
+    <div class="eyebrow" style="justify-content:center">Ready for screening</div>
+    <h3>Drop fundus image here</h3>
+    <p>or browse from device</p>
+    <div class="meta"><span>JPG / PNG</span><span>Maximum 10 MB</span></div>
+    <p style="margin-top:6px;max-width:360px;font-size:13px;color:var(--tx3)">Upload a fundus image to begin AI-assisted analysis.</p>
+    <div class="row">
+      <button class="btn secondary" id="browseBtn">${ic('upload', 'sm')}UPLOAD IMAGE</button>
+      <button class="btn-text" id="useDemo">Use demo case</button>
+    </div>
+    <input type="file" id="fileIn" accept="image/jpeg,image/png" hidden>
+  </div>`;
+}
+
+function blankMeta(o = {}){
+  return { caseId: 'DR-2026-001', age: '', sex: '', diabetesType: '', diabetesDuration: '', hba1c: '', bloodGlucose: '',
+    familyHistory: '', previousDR: '', hypertension: '', centre: '', device: '', ...o };
+}
+const OPT = {
+  sex: ['Female', 'Male', 'Other', 'Prefer not to say'],
+  type: ['Type 1', 'Type 2', 'Gestational', 'Other / Unknown'],
+  yn: ['Yes', 'No', 'Unknown']
+};
+const REQUIRED = ['caseId', 'age', 'sex', 'diabetesType', 'diabetesDuration', 'familyHistory'];
+const NUMERIC = { age: 'int', diabetesDuration: 'dec', hba1c: 'dec', bloodGlucose: 'int' };
+function checkField(k, m){
+  const v = String(m[k] ?? '').trim(), n = Number(v);
+  if (!v) return REQUIRED.includes(k) ? { t: 'missing', msg: 'Required' } : null;
+  const bad = msg => ({ t: 'invalid', msg });
+  switch (k){
+    case 'caseId': return v.length > 24 ? bad('Use 24 characters or fewer') : null;
+    case 'age': return (!Number.isInteger(n) || n < 1 || n > 120) ? bad('Enter an age from 1 to 120') : null;
+    case 'diabetesDuration': {
+      if (!(n >= 0 && n <= 80)) return bad('Enter years since diagnosis (0 to 80)');
+      const a = Number(m.age); if (Number.isInteger(a) && a >= 1 && n > a) return bad('Cannot exceed age');
+      return null; }
+    case 'hba1c': return !(n >= 3 && n <= 20) ? bad('Enter a value from 3 to 20 %') : null;
+    case 'bloodGlucose': return !(n >= 20 && n <= 800) ? bad('Enter a value from 20 to 800 mg/dL') : null;
+  }
+  return null;
+}
+function intake(m = S.meta){
+  const errs = {};
+  ['caseId', 'age', 'sex', 'diabetesType', 'diabetesDuration', 'hba1c', 'bloodGlucose', 'familyHistory'].forEach(k => { const e = checkField(k, m); if (e) errs[k] = e; });
+  const has = k => !errs[k] && String(m[k] ?? '').trim() !== '';
+  return { errs, ok: !Object.keys(errs).length,
+    patientOK: ['caseId', 'age', 'sex'].every(has), historyOK: ['diabetesType', 'diabetesDuration', 'familyHistory'].every(has) };
+}
+const durTxt = m => { const n = Number(m.diabetesDuration); return `${m.diabetesDuration} ${n === 1 ? 'year' : 'years'}`; };
+const typeLong = t => t === 'Type 1' || t === 'Type 2' ? `${t} diabetes` : t === 'Gestational' ? 'Gestational diabetes' : 'Diabetes (type unknown)';
+const orDash = v => (v && String(v).trim()) ? String(v).trim() : 'Not recorded';
+
+const RQ = '<i class="rq" title="Required"></i>';
+function fInput(k, label, o = {}){
+  const v = S.meta[k] ?? '';
+  return `<label class="fld" data-f="${k}"><span><span>${label}${o.req ? RQ : ''}</span>${o.req ? '' : '<em>Optional</em>'}</span>
+    <div class="inp ${o.unit ? 'has-u' : ''} ${o.hideU ? 'hide-u' : ''}"><input data-k="${k}" value="${esc(v)}" ${o.mode ? `inputmode="${o.mode}"` : ''} maxlength="${o.max || 40}" autocomplete="off" placeholder="${o.ph || ''}" ${o.req ? 'aria-required="true"' : ''}>${o.unit ? `<em class="u">${o.unit}</em>` : ''}</div>
+    ${o.help ? `<small class="fh">${o.help}</small>` : ''}<small class="fe" role="alert"></small></label>`;
+}
+function fSelect(k, label, opts, o = {}){
+  const v = S.meta[k] || '';
+  return `<label class="fld" data-f="${k}"><span><span>${label}${o.req ? RQ : ''}</span>${o.req ? '' : '<em>Optional</em>'}</span>
+    <select data-k="${k}" class="${v ? '' : 'empty'}" ${o.req ? 'aria-required="true"' : ''}><option value="" ${v ? '' : 'selected'} disabled hidden>Select</option>${opts.map(x => `<option ${x === v ? 'selected' : ''}>${x}</option>`).join('')}</select><small class="fe" role="alert"></small></label>`;
+}
+function fYN(k, label, req){
+  const v = S.meta[k] || '';
+  return `<div class="yn" data-f="${k}"><div class="ynr"><span class="yl">${label}${req ? RQ : '<em>Optional</em>'}</span>
+    <div class="seg mini" role="radiogroup" aria-label="${label}">${OPT.yn.map(x => `<button type="button" role="radio" data-k="${k}" data-v="${x}" aria-checked="${v === x}">${x}</button>`).join('')}</div></div><small class="fe" role="alert"></small></div>`;
+}
+function intakeHTML(){
+  return `<div class="card l2 case-panel intake" id="intake">
+    <div class="ch-row"><h3 class="ch">Patient &amp; clinical information</h3>${S.editIntake ? '<button class="btn-text" id="intakeDone">Done</button>' : ''}</div>
+    <div class="grp"><div class="gl">Patient details</div>
+      <div class="g2">${fInput('caseId', 'Patient / Case ID', { req: 1, max: 24, help: 'Identifier used throughout this screening record' })}${fInput('age', 'Age', { req: 1, mode: 'numeric', unit: 'years', max: 3 })}</div>
+      ${fSelect('sex', 'Sex', OPT.sex, { req: 1 })}
+    </div>
+    <div class="grp"><div class="gl">Diabetes history</div>
+      <div class="g2">${fSelect('diabetesType', 'Diabetes type', OPT.type, { req: 1 })}${fInput('diabetesDuration', 'Diabetes duration', { req: 1, mode: 'decimal', unit: 'years', hideU: 1, ph: 'Years since diagnosis', max: 4 })}</div>
+      <div class="g2">${fInput('hba1c', 'Latest HbA1c', { mode: 'decimal', unit: '%', ph: '—', max: 4 })}${fInput('bloodGlucose', 'Latest blood glucose', { mode: 'numeric', unit: 'mg/dL', ph: '—', max: 3 })}</div>
+    </div>
+    <div class="grp"><div class="gl">Risk / history</div>
+      ${fYN('familyHistory', 'Family history of diabetes', true)}${fYN('previousDR', 'Previous diabetic retinopathy', false)}${fYN('hypertension', 'Hypertension', false)}
+    </div>
+    details class="opt"><summary>Screening details <em>Optional</em></summary>
+      <div class="g2">${fInput('centre', 'Screening centre', { ph: '—', max: 60 })}${fInput('device', 'Capture device', { ph: '—', max: 60 })}</div></details>
+    <p class="req-note"><i class="rq"></i>Required before analysis</p>
+  </div>`;
+}
+function summaryHTML(editable){
+  const m = S.meta, row = (l, v) => `<div><dt>${l}</dt><dd>${esc(v)}</dd></div>`;
+  return `<div class="card l2 case-panel psum" id="psum">
+    <div class="ch-row"><h3 class="ch">Patient summary</h3>${editable ? '<button class="btn-text" id="editIntake">Edit</button>' : ''}</div>
+    <dl class="sum">${row('Patient ID', m.caseId.trim())}${row('Age', m.age)}${row('Sex', m.sex)}${row('Diabetes', `${m.diabetesType} • ${durTxt(m)}`)}${m.hba1c ? row('HbA1c', m.hba1c + '%') : ''}${row('Family history', m.familyHistory)}</dl></div>`;
+}
+function readyInner(){
+  const c = intake(), hasImg = !!S.img, all = c.ok && hasImg;
+  const li = (ok, t) => `<li class="ck ${ok ? 'ok' : ''}">${ok ? ic('check') : '<span class="ckc"></span>'}<span>${t}</span></li>`;
+  return `<h3 class="ch" style="margin-bottom:14px">${all ? '<span class="ok-t">Patient ready</span>' : 'Screening checklist'}</h3>
+    <ol>${li(c.patientOK, 'Patient information complete')}${li(c.historyOK, 'Clinical history recorded')}${li(hasImg, 'Fundus image received')}</ol>
+    ${all ? `<p class="ready-line">${ic('shield', 'sm')}Ready for AI-assisted screening</p>` : ''}
+    <p class="hint" style="margin-top:14px">Clinical history is recorded as screening context and is not used by the current prototype model.</p>`;
+}
+const readyHTML = () => `<div class="card l3 next sec-hide" id="readyCard">${readyInner()}</div>`;
+function pvStatusHTML(){
+  const ok = intake().ok;
+  return `<span class="ps ${ok ? 'ok' : 'off'}">${ok ? ic('check', 'sm') : '<span class="ckc sm"></span>'}Patient profile ${ok ? 'complete' : 'incomplete'}</span>
+    <span class="ps ok">${ic('check', 'sm')}Fundus image received</span>
+    ${ok ? '' : `<span class="pv-msg ${S.attempted ? 'warn' : ''}">Complete the required patient information before analysis.</span>`}`;
+}
+function refreshFields(c = intake()){
+  $$('[data-f]').forEach(el => {
+    const k = el.dataset.f, e = c.errs[k];
+    const show = !!e && ((e.t === 'missing' && S.attempted) || (e.t === 'invalid' && (S.attempted || S.touched[k])));
+    el.classList.toggle('bad', show); const fe = $('.fe', el); if (fe) fe.textContent = show ? e.msg : '';
+  });
+}
+function syncIntake(){
+  const c = intake(); refreshFields(c);
+  const rc = $('#readyCard'); if (rc) rc.innerHTML = readyInner();
+  const ps = $('#pvStatus'); if (ps) ps.innerHTML = pvStatusHTML();
+  const b = $('#analyzeBtn'); if (b){ b.setAttribute('aria-disabled', String(!c.ok)); b.classList.toggle('is-off', !c.ok); }
+  updateWf();
+}
+function bindIntake(){
+  const root = $('#intake'); if (!root) return;
+  root.addEventListener('input', e => {
+    const t = e.target, k = t.dataset && t.dataset.k; if (!k || t.tagName === 'BUTTON') return;
+    if (NUMERIC[k]){ const c = NUMERIC[k] === 'int' ? t.value.replace(/\D/g, '') : t.value.replace(/[^\d.]/g, '').replace(/(\..*)\./g, '$1'); if (c !== t.value) t.value = c; }
+    S.meta[k] = t.value; syncIntake();
+  });
+  root.addEventListener('change', e => { const t = e.target; if (t.tagName === 'SELECT'){ S.meta[t.dataset.k] = t.value; t.classList.remove('empty'); syncIntake(); } });
+  root.addEventListener('focusout', e => { const k = e.target.dataset && e.target.dataset.k; if (k){ S.touched[k] = true; refreshFields(); } });
+  root.addEventListener('click', e => {
+    const b = e.target.closest('button[data-v]'); if (!b) return;
+    S.meta[b.dataset.k] = b.dataset.v; $$(`button[data-k="${b.dataset.k}"]`, root).forEach(x => x.setAttribute('aria-checked', String(x === b))); syncIntake();
+  });
+  $('#intakeDone')?.addEventListener('click', () => { if (!intake().ok){ S.attempted = true; syncIntake(); return; } S.editIntake = false; renderWorkspace(); });
+}
+const WF = [['PATIENT INTAKE', 'Patient and clinical context'], ['RETINAL IMAGE', 'Upload and review fundus image'], ['AI SCREENING', 'Quality, severity, evidence'], ['CLINICIAN REVIEW', 'Referral and final assessment']];
+function wfInner(st){ return WF.map((w, i) => `<li class="${st[i]}" ${st[i] === 'active' ? 'aria-current="step"' : ''}><span class="n">${st[i] === 'done' ? ic('check', 'sm') : '0' + (i + 1)}</span><span><b>${w[0]}</b><small>${w[1]}</small></span></li>`).join(''); }
+function wfStates(){
+  const s = S.stage, ok = intake().ok;
+  if (s === 'analyzing') return ['done', 'done', 'active', 'idle'];
+  if (s === 'error') return ['done', 'done', 'warn', 'idle'];
+  if (s === 'rejected') return ['done', 'warn', 'idle', 'idle'];
+  if (s === 'result') return ['done', 'done', 'done', 'active'];
+  if (S.img) return [ok ? 'done' : 'warn', 'active', 'idle', 'idle'];
+  return ok ? ['done', 'active', 'idle', 'idle'] : ['active', 'idle', 'idle', 'idle'];
+}
+function updateWf(){ const el = $('#wf'); if (el) el.innerHTML = wfInner(wfStates()); }
+
+function previewHTML(mode){
+  const scanning = mode === 'scanning', rej = mode === 'rejected', errm = mode === 'error';
+  const badge = scanning ? `<span class="badge info pv-badge"><i class="dot info"></i>PROCESSING</span>`
+    : rej ? `<span class="badge warn pv-badge">${ic('alert', 'sm')}NOT ACCEPTED</span>`
+    : errm ? `<span class="badge info pv-badge"><i class="dot info"></i>IMAGE LOADED</span>`
+    : `<span class="badge ok pv-badge"><i class="dot ok"></i>IMAGE RECEIVED</span>`;
+  const tools = (!scanning && !rej && !errm) ? `<div class="pv-tools">
+      <button class="tool" data-z="fit" aria-pressed="false" title="Toggle fit / actual size">${ic('max', 'sm')}FIT</button>
+      <button class="tool" data-z="zin" aria-label="Zoom in">${ic('zin', 'sm')}ZOOM +</button>
+      <button class="tool" data-z="zout" aria-label="Zoom out">${ic('zout', 'sm')}ZOOM −</button>
+      <button class="tool" data-z="reset" aria-label="Reset view">${ic('reset', 'sm')}RESET</button></div>` : '';
+  const foot = scanning
+    ? `<div class="pv-foot"><div class="pv-progress" aria-hidden="true"><i id="plBar"></i></div><span style="font-size:13px;color:var(--tx2)">Analysis in progress</span></div>`
+    : `${(rej || errm) ? '' : `<div class="pv-status" id="pvStatus">${pvStatusHTML()}</div>`}<div class="pv-foot"><div class="fn"><span title="${esc(S.img.name)}">${esc(S.img.name)}</span><button class="btn-text" id="replaceBtn">Replace image</button></div>
+       ${(rej || errm) ? '' : `<button class="btn primary lg ${intake().ok ? '' : 'is-off'}" id="analyzeBtn" aria-disabled="${!intake().ok}">RUN AI SCREENING ${ic('arrow')}</button>`}</div>`;
+  return `<div class="card l1 preview ${scanning ? 'is-scanning' : ''} ${rej ? 'rejected' : ''}">
+    <div class="pv-frame" id="pvFrame">
+      <div class="stack" id="pvStack"><img src="${S.img.src}" alt="Uploaded retinal fundus image: ${esc(S.img.name)}"></div>
+      <i class="cb tl"></i><i class="cb tr"></i><i class="cb bl"></i><i class="cb br"></i>
+      ${badge}${tools}
+      ${scanning ? '<div class="scan"></div><div class="scan-label">ANALYZING RETINAL IMAGE</div>' : ''}
+    </div>${foot}</div>`;
+}
+function pipelineHTML(){
+  return `<div class="card l1 pipeline">
+    <div class="lbl">AI pipeline</div>
+    <h3>ANALYZING RETINAL IMAGE</h3>
+    <p id="plMsg" role="status" aria-live="polite">Receiving retinal image...</p>
+    <ol class="pl">${PIPELINE.map((p, i) => `<li data-i="${i}"><span class="nd">${ic('check')}</span><span>${p.name}</span><span class="idx">0${i + 1}</span></li>`).join('')}</ol>
+  </div>`;
+}
+function rejectHTML(){
+  const q = S.res?.quality || { score: 41, focus: 32, illumination: 44, field_of_view: 61, reasons: ['Quality gate failure'] };
+  const row = (l, v) => `<div class="mrow"><span>${l}</span><div class="bar go"><i class="${scoreTone(v)}" style="--w:${v}%;width:${v}%"></i></div><b>${v}%</b></div>`;
+  return `<div class="card l1 reject">
+    <span class="pill warn">${ic('alert', 'sm')}RECAPTURE REQUIRED</span>
+    <h2>IMAGE NOT SUITABLE FOR ANALYSIS</h2>
+    <p class="lead">No screening result was generated. A prediction is never shown for an image that fails the quality check.</p>
+    <div class="qmini"><div class="mrow" style="grid-template-columns:104px 1fr 38px"><span style="color:var(--tx)">Image quality</span><div class="bar go"><i class="red" style="width:${q.score}%"></i></div><b>${q.score}%</b></div>
+      ${row('Focus', q.focus)}${row('Illumination', q.illumination)}${row('Field of view', q.field_of_view)}</div>
+    <h4>Reasons</h4>
+    <div class="reasons">${(q.reasons || []).map(r => `<span class="pill warn">${ic('x', 'sm')}${esc(r)}</span>`).join('')}</div>
+    <h4>How to recapture</h4>
+    <ol class="recap"><li>Improve focus</li><li>Ensure adequate illumination</li><li>Capture the complete retinal field</li></ol>
+    <button class="btn primary lg" id="uploadNew">${ic('upload', 'sm')}UPLOAD NEW IMAGE</button>
+  </div>`;
+}
+function errorHTML(){
+  return `<div class="card l1 reject">
+    <span class="pill warn">${ic('alert', 'sm')}SERVICE NOTICE</span>
+    <h2>ANALYSIS TEMPORARILY UNAVAILABLE</h2>
+    <p class="lead">Your image is still loaded. Try the analysis again in a moment. If this continues, ensure the FastAPI backend is running.</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap"><button class="btn primary" id="retryBtn">RETRY ANALYSIS ${ic('arrow')}</button><button class="btn secondary" id="replaceBtn2">REPLACE IMAGE</button></div>
+  </div>`;
+}
+
+function sideHTML(){
+  const st = S.stage, c = intake(), summary = S.img && c.ok && !S.editIntake;
+  if (st === 'empty') return intakeHTML() + readyHTML();
+  if (st === 'preview') return (summary ? summaryHTML(true) : intakeHTML()) + readyHTML();
+  const tail = c.ok ? summaryHTML(false) : '';
+  if (st === 'analyzing') return pipelineHTML() + tail;
+  if (st === 'rejected') return rejectHTML() + tail;
+  return errorHTML() + tail;
+}
+function renderWorkspace(){
+  const st = S.stage, stage = $('#stage'), side = $('#side');
+  $('#wsGrid').dataset.stage = st;
+  if (st === 'empty') stage.innerHTML = uploadHTML();
+  else if (st === 'preview') stage.innerHTML = previewHTML('');
+  else if (st === 'analyzing') stage.innerHTML = previewHTML('scanning');
+  else if (st === 'rejected') stage.innerHTML = previewHTML('rejected');
+  else if (st === 'error') stage.innerHTML = previewHTML('error');
+  side.innerHTML = sideHTML();
+  if (st === 'empty') bindUpload();
+  if (st === 'preview') bindPreview();
+  if (st === 'rejected'){ $('#replaceBtn')?.addEventListener('click', resetImage); $('#uploadNew')?.addEventListener('click', resetImage); }
+  if (st === 'error'){ $('#retryBtn')?.addEventListener('click', runAnalysis); $('#replaceBtn2')?.addEventListener('click', resetImage); $('#replaceBtn')?.addEventListener('click', resetImage); }
+  bindIntake();
+  $('#editIntake')?.addEventListener('click', () => { S.editIntake = true; renderWorkspace(); });
+  $('#hero').hidden = false; $('#workspace').hidden = false; $('#results').hidden = true;
+  updateWf();
+}
+function showUploadError(title, msg){
+  $('#wsError').innerHTML = `<div class="err" role="alert">${ic('alert')}<div><b>${esc(title)}</b><span>${esc(msg)}</span></div><button aria-label="Dismiss" id="errX">${ic('x', 'sm')}</button></div>`;
+  $('#errX').addEventListener('click', clearError);
+}
+function clearError(){ $('#wsError').innerHTML = ''; }
+
+function bindUpload(){
+  const dz = $('#dropzone'), fi = $('#fileIn');
+  const pick = () => fi.click();
+  dz.addEventListener('click', e => { if (e.target.closest('#useDemo')) return; if (e.target === fi) return; pick(); });
+  dz.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); pick(); } });
+  ['dragenter', 'dragover'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('drag'); }));
+  ['dragleave', 'drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('drag'); }));
+  dz.addEventListener('drop', e => handleFile(e.dataTransfer?.files?.[0]));
+  fi.addEventListener('change', () => handleFile(fi.files[0]));
+  $('#useDemo').addEventListener('click', e => { e.stopPropagation(); loadDemo('moderate'); });
+}
+async function handleFile(file){
+  clearError(); if (!file) return;
+  if (!/^image\/(jpeg|png)$/.test(file.type) && !/\.(jpe?g|png)$/i.test(file.name)) return showUploadError('IMAGE FORMAT NOT SUPPORTED', 'Please upload JPG or PNG.');
+  if (file.size > 10 * 1024 * 1024) return showUploadError('IMAGE TOO LARGE', 'Maximum file size is 10 MB.');
+  try {
+    const url = URL.createObjectURL(file), im = await loadImage(url), cv = squareCanvas(im, 720); URL.revokeObjectURL(url);
+    S.img = { src: cv.toDataURL('image/jpeg', .92), lesions: null, demo: null, name: file.name };
+    S.res = null; S.stage = 'preview'; S.editIntake = false; renderWorkspace();
+  } catch (e){ showUploadError('IMAGE COULD NOT BE READ', 'The file may be damaged. Please try another image.'); }
+}
+function loadDemo(key){
+  clearError(); const a = demoAsset(key);
+  S.img = { src: a.src, lesions: a.lesions, demo: key, name: `${DEMO_CASES[key].label} (demo)` };
+  S.meta = blankMeta(DEMO_CASES[key].profile); S.attempted = false; S.touched = {}; S.editIntake = false; S.res = null; S.stage = 'preview'; renderWorkspace();
+  $('#workspace').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function resetImage(){ clearError(); S.img = null; S.res = null; S.stage = 'empty'; S.editIntake = false; renderWorkspace(); }
+
+function bindPreview(){
+  const frame = $('#pvFrame'), zp = zoomPan(frame, $('#pvStack'));
+  $$('[data-z]').forEach(b => b.addEventListener('click', () => { const r = zp[b.dataset.z](); if (b.dataset.z === 'fit') b.setAttribute('aria-pressed', !!r); }));
+  $('#replaceBtn').addEventListener('click', resetImage);
+  $('#analyzeBtn').addEventListener('click', runAnalysis);
+}
+
+function closeDemoMenu(){ $('#demoMenu').hidden = true; $('#demoBtn').setAttribute('aria-expanded', 'false'); }
+$('#demoBtn').addEventListener('click', e => { e.stopPropagation(); const h = $('#demoMenu').hidden; $('#demoMenu').hidden = !h; $('#demoBtn').setAttribute('aria-expanded', h); if (h) $('#demoMenu button').focus(); });
+$$('#demoMenu [data-demo]').forEach(b => b.addEventListener('click', () => { closeDemoMenu(); loadDemo(b.dataset.demo); }));
+$('#ctaStart').addEventListener('click', () => $('#workspace').scrollIntoView({ behavior: 'smooth' }));
+$('#ctaDemo').addEventListener('click', () => loadDemo('moderate'));
+
+/* ============================================================
+   ANALYSIS EXECUTION
+   ============================================================ */
+async function runAnalysis(){
+  if (S.busy || !S.img) return;
+  if (!intake().ok){
+    S.attempted = true;
+    if (!$('#intake')){ S.editIntake = true; renderWorkspace(); }
+    syncIntake();
+    const first = $('#intake .fld.bad, #intake .yn.bad');
+    if (first){ first.scrollIntoView({ behavior: 'smooth', block: 'center' }); first.querySelector('input,select,button')?.focus({ preventScroll: true }); }
+    return;
+  }
+  S.meta.caseId = S.meta.caseId.trim(); S.editIntake = false;
+  S.busy = true; S.stage = 'analyzing'; renderWorkspace();
+  $('#workspace').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  const resP = analyzeImage(S.img).then(r => ({ r }), e => ({ e }));
+  const items = $$('.pl li'), bar = $('#plBar'), msg = $('#plMsg');
+  const setBar = f => { if (bar) bar.style.width = Math.round(f * 100) + '%'; };
+
+  for (let i = 0; i < PIPELINE.length; i++){
+    items[i].className = 'active'; msg.textContent = PIPELINE[i].msg; setBar(i / PIPELINE.length);
+    await sleep(PIPELINE[i].ms);
+    if (i === 1){
+      const out = await resP;
+      if (out.e){
+        items[i].className = 'fail'; await sleep(500); S.busy = false; S.stage = 'error'; return renderWorkspace();
+      }
+      S.res = out.r;
+      if (S.res.quality.status === 'FAIL' || S.res.status === 'QUALITY_REJECTED'){
+        items[i].className = 'fail'; items[i].querySelector('.nd').innerHTML = ic('x');
+        for (let j = i + 1; j < items.length; j++) items[j].className = 'skipped';
+        msg.textContent = 'Image quality check failed.'; await sleep(900);
+        S.busy = false; S.stage = 'rejected'; return renderWorkspace();
+      }
+    }
+    items[i].className = 'done';
+  }
+  setBar(1); msg.textContent = 'Analysis complete.'; await sleep(450);
+  S.busy = false; S.stage = 'result'; S.review[S.meta.caseId] ||= 'pending';
+  S.ctx = { caseId: S.meta.caseId || 'DR-2026-001', img: S.img, res: S.res, key: S.img.demo, meta: { ...S.meta } };
+  showResults(S.ctx);
+}
+
+/* ============================================================
+   RESULTS RENDERING
+   ============================================================ */
+const io = new IntersectionObserver(es => es.forEach(e => {
+  if (!e.isIntersecting) return;
+  e.target.classList.add('in'); io.unobserve(e.target);
+  $$('[data-count]', e.target).concat(e.target.dataset.count ? [e.target] : []).forEach(count);
+}), { threshold: .12 });
+function count(el){
+  const to = +el.dataset.count, dec = +(el.dataset.dec || 0), t0 = performance.now(), dur = 1000;
+  const tick = t => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = (to * e).toFixed(dec); if (k < 1) requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+}
+const sevHeadline = l => l === 'No DR' ? 'NO DR' : (l || '').replace(/\s*DR$/, '').toUpperCase();
+
+function ptLine(m){
+  if (!m || !m.age) return '';
+  const parts = [m.age, m.sex, m.diabetesType ? typeLong(m.diabetesType) : '', m.diabetesDuration !== '' && m.diabetesDuration != null ? durTxt(m) : ''].filter(Boolean);
+  return `<div class="pt-line"><span class="lbl">PATIENT</span><span>${parts.map(esc).join(' • ')}</span></div>`;
+}
+function ctxCardHTML(m){
+  if (!m || !m.age) return '';
+  const it = (l, v) => `<div><dt>${l}</dt><dd>${esc(v)}</dd></div>`;
+  return `<div class="card l3 cctx reveal" style="--d:800ms" aria-label="Clinical context">
+    <div class="head"><h3 class="ch" style="margin:0">Clinical context</h3><span class="tag2">Recorded history</span></div>
+    <dl class="cgrid">${it('Diabetes type', orDash(m.diabetesType))}${it('Duration', m.diabetesDuration !== '' ? durTxt(m) : 'Not recorded')}${it('HbA1c', m.hba1c ? m.hba1c + '%' : 'Not recorded')}${it('Family history', orDash(m.familyHistory))}${it('Previous DR', orDash(m.previousDR))}${it('Hypertension', orDash(m.hypertension))}</dl>
+    <p class="chart-note">Recorded clinical history provides context for clinician review; it does not alter the current model's image-based prediction.</p>
+  </div>`;
+}
+function resultsHTML(ctx){
+  const { res, caseId } = ctx, p = res.prediction, q = res.quality, L = res.lesions || {}, ref = deriveReferral(p), tone = p ? gradeTone(p.grade) : 'warn';
+  const revState = S.review[caseId] || 'pending';
+  const miniBar = (l, v) => `<div class="mrow"><span>${l}</span><div class="bar"><i class="${scoreTone(v)}" style="--w:${v}%"></i></div><b>${v}%</b></div>`;
+  const off = 150.8 * (1 - (p ? p.confidence : 0));
+  const scale = GRADES.map((g, i) => `<i class="${i === (p ? p.grade : -1) ? 'on ' + tone : ''}" title="${g}"></i>`).join('');
+  const scaleL = GRADES.map((g, i) => `<span class="${i === (p ? p.grade : -1) ? 'on' : ''}">${g === 'Proliferative' ? 'PDR' : g}</span>`).join('');
+  const probs = p ? Object.entries(p.probabilities || {}).map(([k, v], i) => `<div class="prow ${i === p.grade ? 'top' : ''}"><span>${esc(k)}</span><div class="bar"><i style="--w:${(v * 100).toFixed(1)}%"></i></div><b>${pctTxt(v)}</b></div>`).join('') : '';
+  const ev = LESIONS.map((l, i) => { const on = !!L[l.k]; return `<div class="card l2 ev ${on ? 'on' : 'off'} reveal" style="--d:${i * 130}ms">
+      <div class="ico">${ic(l.icon)}</div><div class="ev-name">${l.name}</div><p>${l.desc}</p>
+      <span class="pill ${on ? 'red' : 'mute'}">${on ? ic('alert', 'sm') : ic('x', 'sm')}${on ? 'DETECTED' : 'NOT DETECTED'}</span></div>`; }).join('');
+  const trace = PIPELINE.map((s, i) => `<li style="--k:${i}"><span class="nd">${ic('check')}</span><span>${s.done}</span><small>0${i + 1}</small></li>`).join('');
+  const qTitle = p && p.grade >= 2 ? 'WHY DID THE AI FLAG THIS IMAGE?' : 'WHY DID THE AI REACH THIS RESULT?';
+  const anyLesion = LESIONS.some(l => L[l.k]);
+  const flowStates = revState === 'marked'
+    ? ['done', 'done', 'queued', ''] : ['done', 'done', 'now', ''];
+  const node = (i, ico, t, sub) => `<div class="hr-node ${flowStates[i]}">${ic(ico)}<b>${t}</b><small>${sub}</small></div>`;
+
+  return `
+  <div class="section" style="padding-bottom:24px">
+    <div class="res-head reveal">
+      <div><div class="eyebrow">AI-assisted retinal assessment</div><h2>SCREENING RESULT</h2><p>Review the screening result, visual evidence, and referral flag below.</p>${ptLine(ctx.meta)}</div>
+      <div class="res-tools"><span class="cid">CASE ${esc(caseId)}</span>
+        <span class="proto" title="Results generated via FastAPI end-to-end model inference">${ic('layers', 'sm')}Real AI Result</span>
+        <button class="btn secondary sm" id="newScreen">${ic('plus', 'sm')}NEW SCREENING</button></div>
+    </div>
+
+    <ol class="wf sec-hide" style="margin-bottom:24px" aria-label="Screening workflow">${wfInner(['done', 'done', 'done', 'active'])}</ol>
+    <div class="rc-grid">
+      <article class="card l2 rc reveal" style="--d:0ms" aria-label="Image quality">
+        <div class="lbl">IMAGE QUALITY</div>
+        <div class="q-score"><span data-count="${q.score}">0</span><small>%</small></div>
+        <div class="st ok"><i class="dot ok pulse"></i>${q.status || 'ACCEPTED'}</div>
+        <div class="mini">${miniBar('Focus', q.focus)}${miniBar('Illumination', q.illumination)}${miniBar('Field of view', q.field_of_view)}</div>
+        <div class="note-ok">${ic('check', 'sm')}Suitable for AI-assisted screening</div>
+      </article>
+
+      <article class="card l1 rc reveal" style="--d:220ms" aria-label="DR severity">
+        <div class="lbl">DR SEVERITY</div>
+        <div class="sev-value">${esc(sevHeadline(p ? p.label : 'N/A'))}</div>
+        <div class="conf">
+          <svg viewBox="0 0 56 56" aria-hidden="true"><circle class="trk" cx="28" cy="28" r="24" fill="none" stroke-width="5"/><circle class="val ${tone === 'red' ? '' : tone}" cx="28" cy="28" r="24" fill="none" stroke-width="5" style="--off:${off}"/></svg>
+          <div><b><span data-count="${p ? (p.confidence * 100).toFixed(1) : '0.0'}" data-dec="1">0.0</span>%</b><span>calibrated confidence</span></div>
+        </div>
+        <div><div class="scale">${scale}</div><div class="scale-l" style="margin-top:8px">${scaleL}</div></div>
+      </article>
+
+      <article class="card l2 rc reveal" style="--d:440ms" aria-label="Screening action">
+        <div class="lbl">SCREENING ACTION</div>
+        <div class="ref-value ${ref.tone}">${ref.action}</div>
+        <p class="sub">${ref.note}</p>
+        <div class="st ${ref.tone}" style="margin-top:auto">${ic('flag', 'sm')}${p && p.grade >= 2 ? 'Human review required' : 'Clinician review advised'}</div>
+      </article>
+    </div>
+
+    <div class="banner ${ref.tone === 'red' ? '' : ref.tone} reveal" style="--d:1300ms" role="status">
+      ${ic('flag')}<div><b>${ref.banner}</b><span>${ref.detail}</span></div>
+      <span class="pill ${ref.tone}">${p && p.grade >= 2 ? 'ACTION FLAGGED' : 'NO REFERRAL FLAG'}</span>
+    </div>
+
+    <div class="card l2 prob reveal" style="--d:700ms">
+      <div class="head"><h3>Probability distribution</h3><span>Model output across DR severity grades</span></div>
+      ${probs}
+      <p class="chart-note">Probabilities are model outputs calibrated via temperature scaling.</p>
+    </div>
+
+    ${ctxCardHTML(ctx.meta)}
+  </div>
+
+  <section class="section" id="xai" style="padding-top:32px">
+    <div class="sec-head reveal">
+      <div><div class="eyebrow">Explainable decision</div><h2>${qTitle}</h2><p>Visual evidence supporting the model's screening result</p></div>
+      <div class="seg" role="tablist" aria-label="Right panel view">
+        <button role="tab" aria-selected="false" data-mode="original">ORIGINAL</button>
+        <button role="tab" aria-selected="true" data-mode="attention">AI ATTENTION</button>
+        <button role="tab" aria-selected="false" data-mode="overlay">OVERLAY</button>
+      </div>
+    </div>
+    <div class="xai-grid">
+      <figure class="card l1 xpanel reveal">
+        <figcaption class="xhead"><span>ORIGINAL FUNDUS</span></figcaption>
+        <div class="xframe" data-mode="original"><img src="${ctx.img.src}" alt="Original retinal fundus image" loading="lazy"><span class="xh"></span>
+          <button class="fs" data-full="orig" aria-label="View original image full screen">${ic('max', 'sm')}</button></div>
+        <p class="xcap">The unprocessed image submitted for screening.</p>
+      </figure>
+      <figure class="card l1 xpanel reveal" style="--d:180ms">
+        <figcaption class="xhead"><span id="rTitle">AI ATTENTION</span><span class="tag">GRAD-CAM ATTENTION</span></figcaption>
+        <div class="xframe xai-fade" id="rFrame" data-mode="attention"><img class="base" src="${ctx.img.src}" alt="" loading="lazy"><img class="heat" src="${res.explainability?.gradcam_path || ''}" alt="Grad-CAM attention map" loading="lazy"><span class="xh"></span>
+          <button class="fs" data-full="right" aria-label="View attention map full screen">${ic('max', 'sm')}</button></div>
+        <div class="ovl" id="ovlRow" hidden><label for="ovlRange">Overlay intensity</label><input type="range" id="ovlRange" min="15" max="90" value="55"></div>
+        <div class="colorbar"><span>Low</span><i></i><span>High attention</span></div>
+        <p class="xcap">Highlighted regions indicate image areas contributing to the model's prediction. Alignment score: ${res.explainability?.evidence_alignment ? (res.explainability.evidence_alignment * 100).toFixed(0) + '%' : 'N/A'}.</p>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:24px">
+    <div class="sec-head reveal"><div><div class="eyebrow">Lesion-level findings</div><h2>CLINICAL EVIDENCE</h2><p>Structures the evidence engine flagged for clinician review.</p></div></div>
+    <div class="ev-grid">${ev}</div>
+    <div class="ev-foot reveal">
+      <p>${anyLesion ? 'Findings are automated flags and should be confirmed by a clinician on the source image.' : 'No lesion markers were flagged for this image.'}</p>
+      <button class="btn secondary" id="lesionBtn">${ic('layers', 'sm')}VIEW LESION MAP</button>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:24px">
+    <div class="two-col">
+      <div class="card l2 trace-card reveal sec-hide" id="traceCard">
+        <h3 class="ch">Screening trace</h3>
+        <ol class="trace"><i class="tl-fill"></i>${trace}</ol>
+      </div>
+      <div class="card l1 hr-card reveal" style="--d:150ms">
+        <div class="eyebrow" style="margin-bottom:14px">${ic('user', 'sm')}Human-in-the-loop</div>
+        <h3>HUMAN REVIEW</h3>
+        <p class="sub">AI assists screening. A qualified clinician remains in the decision loop.</p>
+        <div class="hr-flow">
+          ${node(0, 'cpu', 'AI RESULT', 'Generated')}<span class="hr-arrow">${ic('arrow')}</span>
+          ${node(1, 'eye', 'VISUAL EVIDENCE', 'Attached')}<span class="hr-arrow">${ic('arrow')}</span>
+          ${node(2, 'user', 'CLINICIAN REVIEW', revState === 'marked' ? 'Queued for specialist review' : 'Pending clinician review')}<span class="hr-arrow">${ic('arrow')}</span>
+          ${node(3, 'lock', 'FINAL ASSESSMENT', 'By clinician only')}
+        </div>
+        <div class="hr-actions">
+          <button class="btn primary" id="openReport">${ic('file', 'sm')}OPEN SCREENING REPORT</button>
+          <button class="btn secondary" id="markBtn" ${revState === 'marked' ? 'disabled' : ''}>${revState === 'marked' ? ic('check', 'sm') + 'MARKED FOR SPECIALIST REVIEW' : 'MARK FOR SPECIALIST REVIEW'}</button>
+          <span class="hr-status" id="hrStatus"><i class="dot ${revState === 'marked' ? 'info' : 'warn'}"></i>${revState === 'marked' ? 'Marked for specialist review' : 'Pending clinician review'}</span>
+        </div>
+      </div>
+    </div>
+    <div class="disc reveal">${ic('shield', 'sm')}<span>${DISCLAIMER}</span></div>
+  </section>`;
+}
+
+function showResults(ctx, opts = {}){
+  S.ctx = ctx;
+  const root = $('#resultsInner'); root.innerHTML = resultsHTML(ctx);
+  $('#hero').hidden = true; $('#workspace').hidden = true; $('#results').hidden = false;
+  setView('screening');
+  $('#results').hidden = false; $('#hero').hidden = true; $('#workspace').hidden = true;
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  $$('.reveal', root).forEach(el => io.observe(el));
+  $$('.xai-fade', root).forEach(el => io.observe(el));
+  bindResults(ctx);
+}
+function bindResults(ctx){
+  const res = ctx.res, root = $('#resultsInner');
+  $('#newScreen').addEventListener('click', () => { S.stage = 'empty'; S.img = null; S.res = null; S.meta = blankMeta({ caseId: 'DR-2026-00' + (Math.floor(Math.random() * 8) + 4) }); S.attempted = false; S.touched = {}; S.editIntake = false; renderWorkspace(); window.scrollTo({ top: 0 }); $('#workspace').scrollIntoView({ behavior: 'smooth' }); });
+  const rFrame = $('#rFrame'), titles = { original: 'ORIGINAL FUNDUS', attention: 'AI ATTENTION', overlay: 'OVERLAY' };
+  $$('.seg button', root).forEach(b => b.addEventListener('click', () => {
+    $$('.seg button', root).forEach(x => x.setAttribute('aria-selected', x === b));
+    rFrame.dataset.mode = b.dataset.mode; $('#rTitle').textContent = titles[b.dataset.mode]; $('#ovlRow').hidden = b.dataset.mode !== 'overlay';
+  }));
+  $('#ovlRange').addEventListener('input', e => rFrame.style.setProperty('--o', e.target.value / 100));
+  $$('.xframe', root).forEach(f => f.addEventListener('mousemove', e => { const r = f.getBoundingClientRect(); f.style.setProperty('--ox', ((e.clientX - r.left) / r.width * 100) + '%'); f.style.setProperty('--oy', ((e.clientY - r.top) / r.height * 100) + '%'); }));
+  $$('[data-full]', root).forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
+    if (b.dataset.full === 'orig') return openViewer({ title: 'Original fundus', layers: [{ src: ctx.img.src, alt: 'Original retinal fundus image' }], caption: 'Unprocessed image submitted for screening.' });
+    const m = rFrame.dataset.mode;
+    const layers = [{ src: ctx.img.src, alt: 'Original retinal fundus image' }];
+    if (m === 'attention') layers.push({ src: res.explainability?.gradcam_path || '', op: 1, alt: 'Grad-CAM attention map' });
+    if (m === 'overlay') layers.push({ src: res.explainability?.gradcam_path || '', op: (+$('#ovlRange').value) / 100, alt: 'Grad-CAM overlay' });
+    openViewer({ title: titles[m], layers, caption: "Highlighted regions indicate image areas contributing to the model's prediction." });
+  }));
+  $('#lesionBtn').addEventListener('click', () => openViewer({
+    title: 'Lesion map', layers: [{ src: res.lesions?.overlay_path || '', alt: 'Retinal image with lesion markers' }],
+    caption: LESIONS.some(l => res.lesions?.[l.k]) ? 'Markers show regions flagged by the evidence engine. Confirm on the source image.' : 'No lesion markers were flagged for this image.',
+    legend: LESIONS.map(l => ({ name: l.name, color: l.color, on: !!res.lesions?.[l.k] }))
+  }));
+  $('#openReport').addEventListener('click', () => openReport(ctx));
+  $('#markBtn').addEventListener('click', async () => {
+    S.review[ctx.caseId] = 'marked';
+    // Persist review to backend API if screening_id exists
+    if (ctx.res?.screening_id) {
+      fetch(`/api/review/${ctx.res.screening_id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ review_status: 'REVIEWED', reviewer_action: 'SPECIALIST_REVIEW', reviewer_notes: 'Marked from UI' })
+      }).catch(err => console.warn('Review API call failed:', err));
+    }
+    toast('Case marked for specialist review');
+    showResultsKeepScroll(ctx);
+  });
+}
+function showResultsKeepScroll(ctx){
+  const y = window.scrollY, root = $('#resultsInner'); root.innerHTML = resultsHTML(ctx);
+  $$('.reveal, .xai-fade', root).forEach(el => { el.classList.add('in'); }); $$('.bar i', root).forEach(i => i.parentElement.classList.add('go'));
+  $$('[data-count]', root).forEach(el => el.textContent = (+el.dataset.count).toFixed(+(el.dataset.dec || 0)));
+  $$('.conf .val', root).forEach(v => v.style.strokeDashoffset = v.style.getPropertyValue('--off'));
+  bindResults(ctx); window.scrollTo({ top: y, behavior: 'instant' });
+}
+
+/* ============================================================
+   CASES / REPORTS / SYSTEM API INTEGRATION
+   ============================================================ */
+async function fetchCasesFromAPI(){
+  try {
+    const res = await fetch('/api/cases');
+    if (!res.ok) throw new Error('API error');
+    const cases = await res.json();
+    return cases;
+  } catch (err){
+    return null; // Fallback to DEMO_CASES fixtures if API not connected
+  }
+}
+
+async function renderCases(){
+  const casesData = await fetchCasesFromAPI();
+  let htmlRows = '';
+
+  if (casesData && casesData.length > 0){
+    htmlRows = casesData.map(c => {
+      const good = c.quality_status === 'PASS';
+      const refAction = c.decision_action || 'ROUTINE';
+      const tone = refAction === 'REFER' ? 'red' : refAction === 'RECAPTURE' ? 'warn' : 'ok';
+      return `<tr tabindex="0" data-api-case="${c.case_id}">
+        <td class="id">${esc(c.case_id)}</td>
+        <td><span class="pill ${good ? 'ok' : 'warn'}"><i class="dot ${good ? 'ok' : 'warn'}"></i>${c.quality_status || 'PASS'}</span></td>
+        <td>${esc(c.grade_label || 'No DR')}</td>
+        <td>${c.confidence ? Math.round(c.confidence * 100) + '%' : '—'}</td>
+        <td><span class="pill ${tone}">${esc(refAction)}</span></td>
+        <td class="go">${ic('arrow')}</td></tr>`;
+    }).join('');
+  } else {
+    const rows = ['moderate', 'healthy', 'poor'].map(k => {
+      const c = DEMO_CASES[k], r = c.result, p = r.prediction, ref = deriveReferral(p), good = r.quality.status === 'PASS';
+      return { k, id: c.caseId, q: good ? 'Good' : 'Poor', qTone: good ? 'ok' : 'warn', label: p ? p.label : '—', conf: p ? Math.round(p.confidence * 100) + '%' : '—', ref };
+    });
+    htmlRows = rows.map(r => `
+      <tr tabindex="0" data-case="${r.k}">
+        <td class="id">${r.id}</td>
+        <td><span class="pill ${r.qTone}"><i class="dot ${r.qTone}"></i>${r.q}</span></td>
+        <td>${r.label}</td><td>${r.conf}</td>
+        <td><span class="pill ${r.ref.tone}">${r.ref.action}</span></td>
+        <td class="go">${ic('arrow')}</td></tr>`).join('');
+  }
+
+  $('#casesTbl').innerHTML = `<thead><tr><th>Case</th><th>Quality</th><th>Result</th><th>Confidence</th><th>Action</th><th></th></tr></thead><tbody>${htmlRows}</tbody>`;
+  $$('#casesTbl tbody tr').forEach(tr => {
+    const go = () => tr.dataset.apiCase ? openAPICase(tr.dataset.apiCase) : openCase(tr.dataset.case);
+    tr.addEventListener('click', go); tr.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+  });
+}
+
+async function openAPICase(caseId){
+  try {
+    const res = await fetch(`/api/cases/${caseId}`);
+    if (!res.ok) throw new Error('API case load failed');
+    const data = await res.json();
+    S.meta = blankMeta(data.case_profile || { caseId });
+    S.img = { src: data.screening.image_path, lesions: null, demo: null, name: `Case ${caseId}` };
+    S.res = data.screening;
+    S.stage = 'result'; showResults({ caseId, img: S.img, res: S.res, meta: S.meta });
+  } catch (err){
+    toast('Error loading case details from server');
+  }
+}
+
+async function openCase(key){
+  const ctx = await prepareCase(key); S.meta = blankMeta(DEMO_CASES[key].profile); S.attempted = false; S.touched = {}; S.editIntake = false; S.review[ctx.caseId] ||= 'pending';
+  S.img = ctx.img; S.res = ctx.res;
+  if (ctx.res.quality.status !== 'PASS'){ S.stage = 'rejected'; setView('screening'); renderWorkspace(); $('#workspace').scrollIntoView({ block: 'start' }); return; }
+  S.stage = 'result'; showResults(ctx);
+}
+
+async function renderReports(){
+  const list = ['moderate', 'healthy'].map(k => {
+    const c = DEMO_CASES[k], r = c.result, p = r.prediction, ref = deriveReferral(p);
+    return { k, id: c.caseId, label: p ? p.label : '—', conf: p ? (p.confidence * 100).toFixed(1) + '%' : '—', quality: r.quality.score, ref };
+  });
+  $('#rpList').innerHTML = list.map(r => `<article class="card l2 rp-card">
+    <div class="top"><span class="lbl">${r.id}</span><span class="pill ${r.ref.tone}">${r.ref.action}</span></div>
+    <h3>${r.label}</h3>
+    <div><div class="kv"><span>Model confidence</span><b>${r.conf}</b></div>
+    <div class="kv"><span>Image quality</span><b>${r.quality}%</b></div></div>
+    <button class="btn secondary" data-rp="${r.k}">${ic('file', 'sm')}View report</button></article>`).join('');
+  $$('[data-rp]').forEach(b => b.addEventListener('click', async () => { const ctx = await prepareCase(b.dataset.rp); openReport(ctx); }));
+}
+
+async function renderSystem(){
+  try {
+    const sysRes = await fetch('/api/system/status');
+    if (sysRes.ok) {
+      const sysData = await sysRes.json();
+      $('#sysStatusText').textContent = 'BACKEND ONLINE';
+      const mods = [
+        ['AI CLASSIFIER', `Version: ${sysData.classifier_version || 'dr_classifier_v0.1.0'}`, 'cpu'],
+        ['LESION UNET', `Version: ${sysData.lesion_version || 'lesion_unet_v0.1.0'}`, 'layers'],
+        ['QUALITY GATE', 'OpenCV Laplacian & Illumination Check', 'gauge'],
+        ['CONFIDENCE CALIBRATION', `Temperature $T = ${sysData.calibration_temp || '1.24'}$`, 'eye'],
+        ['POSTGRESQL DATABASE', `Active records: ${sysData.total_screenings || 0}`, 'file']
+      ];
+      $('#sysList').innerHTML = mods.map(m => `<div class="sys-row">${ic(m[2])}<div><b>${m[0]}</b><span class="d">${m[1]}</span></div><span class="st ok"><i class="dot ok"></i>ONLINE</span></div>`).join('');
+      $('#contractPre').textContent = JSON.stringify(sysData, null, 2);
+      return;
+    }
+  } catch (err){
+    console.log("System API endpoint offline, rendering static specification");
+  }
+  const mods = [['AI MODEL', 'Severity classification (EfficientNet)', 'cpu'], ['IMAGE QUALITY ENGINE', 'Focus, illumination, field of view', 'gauge'], ['EXPLAINABILITY ENGINE', 'Grad-CAM attention maps', 'eye'], ['EVIDENCE ENGINE', 'Lesion-level findings', 'layers'], ['REPORT ENGINE', 'PDF report generation', 'file']];
+  $('#sysList').innerHTML = mods.map(m => `<div class="sys-row">${ic(m[2])}<div><b>${m[0]}</b><span class="d">${m[1]}</span></div><span class="st ok"><i class="dot ok"></i>READY</span></div>`).join('');
+  $('#contractPre').textContent = JSON.stringify(DEMO_CASES.moderate.result, null, 2);
+}
+$('#simErr').addEventListener('change', e => S.simError = e.target.checked);
+
+/* ============================================================
+   REPORT MODAL & PDF DOWNLOAD
+   ============================================================ */
+function reportHTML(ctx){
+  const { res, caseId, img } = ctx, p = res.prediction, q = res.quality, L = res.lesions || {}, ref = deriveReferral(p);
+  const rev = S.review[caseId] === 'marked' ? 'Marked for specialist review' : 'Pending clinician review';
+  const m = ctx.meta || (caseId === S.meta.caseId ? S.meta : {});
+  const when = new Date(res.timestamp || Date.now()).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+  const logo = `<svg width="26" height="26" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14.5" stroke="#9AA9B5"/><circle cx="16" cy="16" r="9.5" stroke="#CF3238" stroke-width="1.6"/><circle cx="16" cy="16" r="3.2" fill="#CF3238"/></svg>`;
+  const probs = p ? Object.entries(p.probabilities || {}).map(([k, v], i) => `<tr><th>${esc(k)}</th><td>${i === p.grade ? '<b>' : ''}${pctTxt(v)}${i === p.grade ? '</b>' : ''}</td></tr>`).join('') : '';
+  const lesions = LESIONS.map(l => `<tr><th>${l.name}</th><td>${L[l.k] ? '<b>Detected</b>' : 'Not detected'}</td></tr>`).join('');
+  return `<article>
+    <div class="rp-h"><div class="rp-brand">${logo}<span>DRISHTI<b>X</b>AI</span></div><div class="rp-title">SCREENING REPORT</div></div>
+    <div class="rp-meta">
+      ${[['Patient / Case ID', caseId], ['Date &amp; time', when], ['Age', m.age || '—'], ['Sex', m.sex || '—'],
+         ['Diabetes type', m.diabetesType || '—'], ['Diabetes duration', m.diabetesDuration !== undefined && m.diabetesDuration !== '' ? durTxt(m) : '—'], ['HbA1c', m.hba1c ? m.hba1c + '%' : '—'], ['Family history', m.familyHistory || '—'],
+         ['Previous DR', m.previousDR || '—'], ['Hypertension', m.hypertension || '—'], ['Screening centre', m.centre || '—']]
+        .map(([l, v]) => `<div><span>${l}</span><b>${l === 'Date &amp; time' ? v : esc(v)}</b></div>`).join('')}
+    </div>
+    <h4>Imaging</h4>
+    <div class="rp-imgs">
+      <figure><img src="${img.src}" alt="Original fundus image"><figcaption>Original fundus</figcaption></figure>
+      <figure><img src="${res.explainability?.gradcam_path || ''}" alt="Grad-CAM attention map"><figcaption>Model attention (Grad-CAM)</figcaption></figure>
+      <figure><img src="${L.overlay_path || ''}" alt="Lesion map"><figcaption>Lesion map</figcaption></figure>
+    </div>
+    <div class="two">
+      <div><h4>Screening result</h4><table>
+        <tr><th>Image quality</th><td><b>${q.score}%</b> (${q.status === 'PASS' ? 'Accepted' : 'Rejected'})</td></tr>
+        <tr><th>Focus / illumination / field</th><td>${q.focus}% / ${q.illumination}% / ${q.field_of_view}%</td></tr>
+        <tr><th>DR severity</th><td><b>${esc(p ? p.label : 'N/A')}</b></td></tr>
+        <tr><th>Model confidence</th><td>${p ? (p.confidence * 100).toFixed(1) + '%' : '—'}</td></tr>
+        <tr><th>Screening action</th><td><span class="act ${ref.tone === 'red' ? '' : ref.tone}">${ref.action}</span></td></tr>
+        <tr><th>Human review</th><td>${rev}</td></tr></table></div>
+      <div><h4>Lesion evidence</h4><table>${lesions}</table><h4>Probability by grade</h4><table>${probs}</table></div>
+    </div>
+    <div class="sign"><span>Clinician review</span><div>Name and signature</div><div>Date</div></div>
+    <div class="rp-disc">${DISCLAIMER} Values in this report come from model inference. Clinical history is recorded as context.</div>
+  </article>`;
+}
+function openReport(ctx){
+  lastFocus = document.activeElement; S.reportCtx = ctx;
+  $('#reportSheet').innerHTML = reportHTML(ctx); $('#reportModal').hidden = false; document.body.style.overflow = 'hidden';
+  $('#reportModal .modal-body').scrollTop = 0; $('#rpClose').focus();
+}
+function closeReport(){ $('#reportModal').hidden = true; document.body.style.overflow = ''; lastFocus?.focus?.(); }
+$('#rpClose').addEventListener('click', closeReport);
+$('#rpPrint').addEventListener('click', () => { try { window.print(); } catch (e){ toast('Printing is unavailable here. Use Download report.'); } });
+$('#rpDownload').addEventListener('click', async () => {
+  const ctx = S.reportCtx; if (!ctx) return;
+  if (ctx.res?.screening_id) {
+    // Attempt backend PDF download endpoint
+    window.open(`/api/reports/${ctx.res.screening_id}/pdf`, '_blank');
+    toast('Downloading PDF Report...');
+    return;
+  }
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DrishtiXAI Screening Report ${esc(ctx.caseId)}</title><style>body{margin:0;padding:24px;background:#EEF1F4}${$('#reportCss').textContent}@media print{body{padding:0;background:#fff}#reportSheet{box-shadow:none}}</style></head><body><div id="reportSheet">${reportHTML(ctx)}</div></body></html>`;
+  const filename = `DrishtiXAI-report-${ctx.caseId}.html`;
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' })); a.download = filename; document.body.appendChild(a); a.click(); a.remove(); toast('Report downloaded');
+});
+
+/* ============================================================
+   INIT
+   ============================================================ */
+initHero();
+S.stage = 'empty'; renderWorkspace();
+})();
+</script>
+</body>
+</html>
